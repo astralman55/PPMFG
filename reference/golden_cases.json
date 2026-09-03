@@ -1,0 +1,424 @@
+{
+  "generated_by": "pricing_engine.py v2 reference implementation",
+  "config_schema_version": "2.0.0",
+  "config_override": {
+    "shop.remnant_recovery_rate": 0.5
+  },
+  "tolerance_usd": 0.01,
+  "instructions": "The TypeScript port must reproduce every field in `expect` for every case, using config.json with config_override applied.",
+  "cases": [
+    {
+      "name": "canonical_peek_12x12",
+      "input": {
+        "lines": [
+          {
+            "material_code": "PEEK_NAT",
+            "length_in": 12,
+            "width_in": 12,
+            "thickness_in": 0.5,
+            "qty": 1
+          }
+        ],
+        "lead_tier": "STD",
+        "sourcing_mode": "MASTER_SHEET",
+        "order_date": "2026-09-03"
+      },
+      "expect": {
+        "subtotal_goods": 844.19,
+        "shipping": 0.0,
+        "total_due": 869.71,
+        "total_cents": 86971,
+        "cogs": 581.2032,
+        "margin_rate": 0.419799463611229,
+        "c_rework_expected": 8.2747,
+        "c_annealing": 0.0,
+        "gamma": 2.106,
+        "promised_ship_date": "2026-09-09"
+      }
+    },
+    {
+      "name": "peek_ensinger_avl",
+      "input": {
+        "lines": [
+          {
+            "material_code": "PEEK_NAT",
+            "length_in": 12,
+            "width_in": 12,
+            "thickness_in": 0.5,
+            "qty": 1,
+            "brand": "ENSINGER_TECAPEEK"
+          }
+        ],
+        "lead_tier": "STD",
+        "sourcing_mode": "MASTER_SHEET",
+        "order_date": "2026-09-03"
+      },
+      "expect": {
+        "subtotal_goods": 995.98,
+        "shipping": 0.0,
+        "total_due": 1026.04,
+        "total_cents": 102604,
+        "cogs": 697.6456,
+        "margin_rate": 0.40039240036313717,
+        "c_rework_expected": 9.9955,
+        "c_annealing": 0.0,
+        "gamma": 2.301,
+        "promised_ship_date": "2026-09-09"
+      }
+    },
+    {
+      "name": "peek_industrial_tier",
+      "input": {
+        "lines": [
+          {
+            "material_code": "PEEK_NAT",
+            "length_in": 12,
+            "width_in": 12,
+            "thickness_in": 0.5,
+            "qty": 1,
+            "certification_tier": "INDUSTRIAL"
+          }
+        ],
+        "lead_tier": "STD",
+        "sourcing_mode": "MASTER_SHEET",
+        "order_date": "2026-09-03"
+      },
+      "expect": {
+        "subtotal_goods": 653.53,
+        "shipping": 18.0,
+        "total_due": 691.89,
+        "total_cents": 69189,
+        "cogs": 439.6071,
+        "margin_rate": 0.4433988151942464,
+        "c_rework_expected": 6.1821,
+        "c_annealing": 0.0,
+        "gamma": 2.264,
+        "promised_ship_date": "2026-09-09"
+      }
+    },
+    {
+      "name": "peek_nest_tier",
+      "input": {
+        "lines": [
+          {
+            "material_code": "PEEK_NAT",
+            "length_in": 12,
+            "width_in": 12,
+            "thickness_in": 0.5,
+            "qty": 1
+          }
+        ],
+        "lead_tier": "NEST",
+        "sourcing_mode": "MASTER_SHEET",
+        "order_date": "2026-09-03"
+      },
+      "expect": {
+        "subtotal_goods": 789.91,
+        "shipping": 0.0,
+        "total_due": 813.81,
+        "total_cents": 81381,
+        "cogs": 553.5992,
+        "margin_rate": 0.4244001264691653,
+        "c_rework_expected": 7.8667,
+        "c_annealing": 0.0,
+        "gamma": 1.971,
+        "promised_ship_date": "2026-09-17"
+      }
+    },
+    {
+      "name": "peek_sameday",
+      "input": {
+        "lines": [
+          {
+            "material_code": "PEEK_NAT",
+            "length_in": 12,
+            "width_in": 12,
+            "thickness_in": 0.5,
+            "qty": 1
+          }
+        ],
+        "lead_tier": "SAMEDAY",
+        "sourcing_mode": "MASTER_SHEET",
+        "order_date": "2026-09-03"
+      },
+      "expect": {
+        "subtotal_goods": 952.53,
+        "shipping": 0.0,
+        "total_due": 981.29,
+        "total_cents": 98129,
+        "cogs": 609.6723,
+        "margin_rate": 0.41505462043580754,
+        "c_rework_expected": 8.6954,
+        "c_annealing": 0.0,
+        "gamma": 2.376,
+        "promised_ship_date": "2026-09-03"
+      }
+    },
+    {
+      "name": "ultem_precision_annealed_cleanroom",
+      "input": {
+        "lines": [
+          {
+            "material_code": "ULTEM_1000",
+            "length_in": 10,
+            "width_in": 8,
+            "thickness_in": 0.375,
+            "qty": 2,
+            "tolerance_tier": "PRECISION",
+            "face_finish": "CLEANROOM_PACK",
+            "edge_finish": "CHAMFERED",
+            "anneal": true
+          }
+        ],
+        "lead_tier": "STD",
+        "sourcing_mode": "MASTER_SHEET",
+        "order_date": "2026-09-03"
+      },
+      "expect": {
+        "subtotal_goods": 658.05,
+        "shipping": 18.0,
+        "total_due": 696.55,
+        "total_cents": 69655,
+        "cogs": 442.9085,
+        "margin_rate": 0.44284857746108075,
+        "c_rework_expected": 15.1313,
+        "c_annealing": 16.315,
+        "gamma": 2.836,
+        "promised_ship_date": "2026-09-10"
+      }
+    },
+    {
+      "name": "peek_tight_fair",
+      "input": {
+        "lines": [
+          {
+            "material_code": "PEEK_NAT",
+            "length_in": 8,
+            "width_in": 6,
+            "thickness_in": 0.5,
+            "qty": 3,
+            "tolerance_tier": "TIGHT",
+            "add_ons": [
+              "fair_as9102",
+              "dimensional_report"
+            ],
+            "anneal": true
+          }
+        ],
+        "lead_tier": "RUSH48",
+        "order_add_ons": [
+          "wet_signature_coc"
+        ],
+        "sourcing_mode": "MASTER_SHEET",
+        "order_date": "2026-09-03"
+      },
+      "expect": {
+        "subtotal_goods": 1548.33,
+        "shipping": 0.0,
+        "total_due": 1594.88,
+        "total_cents": 159488,
+        "cogs": 1057.1741,
+        "margin_rate": 0.3473318771277267,
+        "c_rework_expected": 66.0551,
+        "c_annealing": 16.705,
+        "gamma": 3.863,
+        "promised_ship_date": "2026-09-08"
+      }
+    },
+    {
+      "name": "delrin_floor_case",
+      "input": {
+        "lines": [
+          {
+            "material_code": "DELRIN_150",
+            "length_in": 2,
+            "width_in": 2,
+            "thickness_in": 0.125,
+            "qty": 1
+          }
+        ],
+        "lead_tier": "STD",
+        "sourcing_mode": "MASTER_SHEET",
+        "order_date": "2026-09-03"
+      },
+      "expect": {
+        "subtotal_goods": 122.02,
+        "shipping": 18.0,
+        "total_due": 144.51,
+        "total_cents": 14451,
+        "cogs": 66.4662,
+        "margin_rate": 0.55,
+        "c_rework_expected": 0.7277,
+        "c_annealing": 0.0,
+        "gamma": 403.838,
+        "promised_ship_date": "2026-09-09"
+      }
+    },
+    {
+      "name": "g10_composite_batchday",
+      "input": {
+        "lines": [
+          {
+            "material_code": "G10_FR4",
+            "length_in": 12,
+            "width_in": 12,
+            "thickness_in": 0.25,
+            "qty": 3
+          }
+        ],
+        "lead_tier": "STD",
+        "sourcing_mode": "MASTER_SHEET",
+        "order_date": "2026-09-03"
+      },
+      "expect": {
+        "subtotal_goods": 367.1,
+        "shipping": 18.0,
+        "total_due": 396.91,
+        "total_cents": 39691,
+        "cogs": 229.2688,
+        "margin_rate": 0.5182924771192489,
+        "c_rework_expected": 3.6158,
+        "c_annealing": 0.0,
+        "gamma": 3.524,
+        "promised_ship_date": "2026-09-09"
+      }
+    },
+    {
+      "name": "ptfe_dim_weight_remote",
+      "input": {
+        "lines": [
+          {
+            "material_code": "PTFE_VIRGIN",
+            "length_in": 24,
+            "width_in": 20,
+            "thickness_in": 0.0625,
+            "qty": 1,
+            "edge_finish": "SCRAPED"
+          }
+        ],
+        "lead_tier": "STD",
+        "dest_zip": "10001",
+        "sourcing_mode": "MASTER_SHEET",
+        "order_date": "2026-09-03"
+      },
+      "expect": {
+        "subtotal_goods": 306.97,
+        "shipping": 32.0,
+        "total_due": 349.4,
+        "total_cents": 34940,
+        "cogs": 187.6053,
+        "margin_rate": 0.5349578933786179,
+        "c_rework_expected": 3.1201,
+        "c_annealing": 0.0,
+        "gamma": 4.141,
+        "promised_ship_date": "2026-09-09"
+      }
+    },
+    {
+      "name": "torlon_high_value",
+      "input": {
+        "lines": [
+          {
+            "material_code": "TORLON_4203",
+            "length_in": 6,
+            "width_in": 4,
+            "thickness_in": 0.5,
+            "qty": 1,
+            "brand": "SOLVAY_TORLON"
+          }
+        ],
+        "lead_tier": "RUSH48",
+        "sourcing_mode": "MASTER_SHEET",
+        "order_date": "2026-09-03"
+      },
+      "expect": {
+        "subtotal_goods": 720.11,
+        "shipping": 18.0,
+        "total_due": 760.46,
+        "total_cents": 76046,
+        "cogs": 476.0959,
+        "margin_rate": 0.4373173471530421,
+        "c_rework_expected": 6.7154,
+        "c_annealing": 0.0,
+        "gamma": 3.022,
+        "promised_ship_date": "2026-09-07"
+      }
+    },
+    {
+      "name": "multiline_mixed_blades",
+      "input": {
+        "lines": [
+          {
+            "material_code": "PEEK_NAT",
+            "length_in": 8,
+            "width_in": 6,
+            "thickness_in": 0.5,
+            "qty": 2
+          },
+          {
+            "material_code": "ULTEM_1000",
+            "length_in": 10,
+            "width_in": 4,
+            "thickness_in": 0.25,
+            "qty": 4
+          },
+          {
+            "material_code": "G10_FR4",
+            "length_in": 12,
+            "width_in": 12,
+            "thickness_in": 0.125,
+            "qty": 1
+          }
+        ],
+        "lead_tier": "RUSH24",
+        "order_add_ons": [
+          "full_chain_traceability"
+        ],
+        "sourcing_mode": "MASTER_SHEET",
+        "order_date": "2026-09-03"
+      },
+      "expect": {
+        "subtotal_goods": 1353.06,
+        "shipping": 0.0,
+        "total_due": 1393.78,
+        "total_cents": 139378,
+        "cogs": 880.7145,
+        "margin_rate": 0.3698809099769793,
+        "c_rework_expected": 11.6937,
+        "c_annealing": 0.0,
+        "gamma": 3.034,
+        "promised_ship_date": "2026-09-04"
+      }
+    },
+    {
+      "name": "jit_dropcut",
+      "input": {
+        "lines": [
+          {
+            "material_code": "PEEK_NAT",
+            "length_in": 12,
+            "width_in": 12,
+            "thickness_in": 0.5,
+            "qty": 1
+          }
+        ],
+        "lead_tier": "STD",
+        "sourcing_mode": "JIT_DROPCUT",
+        "dropcut_quoted_cost": 430.0,
+        "order_date": "2026-09-03"
+      },
+      "expect": {
+        "subtotal_goods": 810.21,
+        "shipping": 0.0,
+        "total_due": 834.72,
+        "total_cents": 83472,
+        "cogs": 555.5978,
+        "margin_rate": 0.42406702878867214,
+        "c_rework_expected": 7.8963,
+        "c_annealing": 0.0,
+        "gamma": 2.021,
+        "promised_ship_date": "2026-09-09"
+      }
+    }
+  ]
+}

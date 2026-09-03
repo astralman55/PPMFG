@@ -1,0 +1,1006 @@
+{
+  "schema_version": "2.0.0",
+  "revision_date": "2026-09-03",
+  "notes": "EVERY tunable number lives in this file. Never hardcode a constant in application code. Values marked UNCALIBRATED are estimates and must be replaced using the calibration protocol in CLAUDE_CODE_BRIEF.md before real orders are taken.",
+  "shop": {
+    "kerf_in": 0.125,
+    "datum_trim_per_edge_in": 0.0625,
+    "approach_overtravel_in": 3.0,
+    "datum_amortization_factor": 1.25,
+    "burdened_rate_per_hr": 78.0,
+    "remnant_recovery_rate": 0.15,
+    "remnant_recovery_rate_note": "UNCALIBRATED. Launch at 0.15. Re-fit monthly from the remnant register. Highest-leverage number in the business.",
+    "brand_lock_rho_factor": 0.45,
+    "brand_lock_note": "When a customer names a specific mill brand, only that brand's remnants can satisfy it. Effective remnant recovery drops by this factor.",
+    "eta_effective_cap": 0.97,
+    "price_floor": 95.0,
+    "order_intake_fee": 19.0,
+    "sourcing_mode": "JIT_DROPCUT",
+    "sourcing_mode_options": [
+      "MASTER_SHEET",
+      "JIT_DROPCUT"
+    ],
+    "jit_passthru_markup": 0.1
+  },
+  "labor": {
+    "t_setup_min": 6.0,
+    "t_load_base_min": 1.5,
+    "t_load_per_lb_min": 0.055,
+    "t_part_base_min": 4.5,
+    "t_part_area_coeff_min": 0.9,
+    "t_remnant_min": 2.0,
+    "t_blade_change_min": 22.0,
+    "t_blade_change_note": "Full changeover. If composite runs are batched to one scheduled day per week, amortize to 4.0-6.0. At 22.0 a single-part order carries the whole changeover.",
+    "learning_curve": 0.88
+  },
+  "certification_tiers": {
+    "TIER1_TRACEABLE": {
+      "label": "Tier 1 - full mill lineage",
+      "description": "Named mill brand, manufacturer MTR and resin certificate, traceable to batch. Required for AVL, aerospace and defense work.",
+      "price_multiplier": 1.0,
+      "traceability_available": true,
+      "dfars_statement": true,
+      "brand_selection_allowed": true,
+      "blocked_addons": []
+    },
+    "INDUSTRIAL": {
+      "label": "Certified industrial grade",
+      "description": "High-performance industrial stock verified in-house to ASTM. No mill lineage. Not for AVL or flight hardware.",
+      "price_multiplier": 0.72,
+      "traceability_available": false,
+      "dfars_statement": false,
+      "brand_selection_allowed": false,
+      "blocked_addons": [
+        "full_chain_traceability",
+        "wet_signature_coc",
+        "fair_as9102",
+        "resin_certificate"
+      ]
+    }
+  },
+  "tolerance_tiers": {
+    "STANDARD": {
+      "label": "Standard  +/-0.030 in",
+      "tolerance_in": 0.03,
+      "squareness_in_per_12in": 0.01,
+      "extra_passes": 0,
+      "inspection_min_per_part": 0.0,
+      "inspection_sampling": "first_article_only",
+      "max_dim_in": 47.0,
+      "p_rework_base": 0.015
+    },
+    "PRECISION": {
+      "label": "Precision  +/-0.015 in",
+      "tolerance_in": 0.015,
+      "squareness_in_per_12in": 0.006,
+      "extra_passes": 1,
+      "inspection_min_per_part": 1.8,
+      "inspection_sampling": "every_part",
+      "max_dim_in": 36.0,
+      "p_rework_base": 0.045
+    },
+    "TIGHT": {
+      "label": "Tight  +/-0.010 in",
+      "tolerance_in": 0.01,
+      "squareness_in_per_12in": 0.004,
+      "extra_passes": 2,
+      "inspection_min_per_part": 3.5,
+      "inspection_sampling": "every_part_recorded",
+      "max_dim_in": 24.0,
+      "p_rework_base": 0.11,
+      "requires_temperature_stabilization": true,
+      "stabilization_hours": 12
+    }
+  },
+  "tolerance_note": "A sliding table saw cannot hold +/-0.010 in over a long span. max_dim_in is a HARD gate per tier, not a guideline. Above it the engine must refuse and route to manual review.",
+  "rework_model": {
+    "size_factor_per_12in_over": 0.35,
+    "residual_stress_multiplier": 1.6,
+    "residual_stress_note": "Applies only when the tolerance tier is tighter than STANDARD. Stress relaxation is what puts precision cuts out of spec.",
+    "filled_grade_multiplier": 1.25,
+    "severity": 1.0,
+    "severity_note": "1.0 = a rework consumes full material and full processing again. Lower only if you can reliably salvage from remnant."
+  },
+  "edge_finish": {
+    "AS_SAWN": {
+      "label": "As sawn",
+      "description": "Straight off the blade. May show saw witness marks; PTFE and UHMW may show light fuzz.",
+      "min_per_in_perimeter": 0.0,
+      "passes_perimeter": 0,
+      "included": true,
+      "disclose": "Saw witness marks visible on all four edges."
+    },
+    "DEBURRED": {
+      "label": "Deburred (standard)",
+      "description": "All four edges hand-deburred. Included in every order.",
+      "min_per_in_perimeter": 0.0,
+      "passes_perimeter": 0,
+      "included": true
+    },
+    "CHAMFERED": {
+      "label": "Chamfered 0.015 x 45 deg",
+      "description": "Deliberate edge break on all eight edges, both faces.",
+      "min_per_in_perimeter": 0.055,
+      "passes_perimeter": 2,
+      "included": false
+    },
+    "SCRAPED": {
+      "label": "Scraped clean edge",
+      "description": "Hand-scraped to remove all saw witness marks. Uniform matte edge.",
+      "min_per_in_perimeter": 0.115,
+      "passes_perimeter": 1,
+      "included": false
+    }
+  },
+  "edge_finish_note": "Flame polishing is deliberately absent. It is an acrylic and polycarbonate process; on PEEK, Ultem and PPS it degrades the surface and induces stress. Do not add it.",
+  "face_finish": {
+    "AS_SUPPLIED": {
+      "label": "As supplied by the mill",
+      "description": "Mill surface, masking retained where present. Thickness is NOT machined.",
+      "min_per_sqft": 0.0,
+      "min_per_part": 0.0,
+      "material_cost_per_sqft": 0.0,
+      "included": true
+    },
+    "MASKING_REMOVED": {
+      "label": "Masking removed",
+      "min_per_sqft": 0.45,
+      "min_per_part": 0.0,
+      "material_cost_per_sqft": 0.0,
+      "included": false
+    },
+    "FILM_APPLIED": {
+      "label": "Protective film applied",
+      "description": "New low-tack film on both faces for materials that ship bare.",
+      "min_per_sqft": 1.1,
+      "min_per_part": 0.0,
+      "material_cost_per_sqft": 0.38,
+      "included": false
+    },
+    "CLEANROOM_PACK": {
+      "label": "Cleanroom handling and pack",
+      "description": "Nitrile handling throughout, surface clean, double bag with lot label between layers.",
+      "min_per_sqft": 2.4,
+      "min_per_part": 3.0,
+      "material_cost_per_sqft": 0.95,
+      "included": false,
+      "solvent_default": "IPA_WIPE",
+      "solvent_for_stress_crack_sensitive": "DI_WATER_LINT_FREE",
+      "solvent_note": "CRITICAL: isopropyl alcohol is a stress-cracking agent on Ultem/PEI and other amorphous grades. The engine must switch to the DI water process automatically for any material flagged solvent_stress_crack_sensitive."
+    }
+  },
+  "add_ons": {
+    "wet_signature_coc": {
+      "label": "Wet-signed Certificate of Conformance",
+      "price": 25.0,
+      "per": "order",
+      "labor_min": 4.0
+    },
+    "full_chain_traceability": {
+      "label": "Full chain-of-custody packet",
+      "price": 45.0,
+      "per": "order",
+      "labor_min": 12.0
+    },
+    "resin_certificate": {
+      "label": "Resin batch certificate",
+      "price": 35.0,
+      "per": "line",
+      "labor_min": 6.0,
+      "tier1_only": true
+    },
+    "fair_as9102": {
+      "label": "First Article Inspection Report (AS9102)",
+      "price": 185.0,
+      "per": "line",
+      "labor_min": 35.0,
+      "tier1_only": true,
+      "forces_tolerance_min": "PRECISION",
+      "note": "A real AS9102 form 1/2/3 package. Do not offer this until you have a documented inspection process and calibrated gauges."
+    },
+    "dimensional_report": {
+      "label": "Signed dimensional inspection report",
+      "price": 45.0,
+      "per": "line",
+      "labor_min_per_part": 2.2
+    },
+    "part_marking": {
+      "label": "Lot number marked on each piece",
+      "price": 0.0,
+      "per": "part",
+      "labor_min_per_part": 0.8,
+      "consumable_per_part": 0.12
+    },
+    "individual_bagging": {
+      "label": "Each piece individually bagged and labelled",
+      "price": 0.0,
+      "per": "part",
+      "labor_min_per_part": 0.6,
+      "consumable_per_part": 0.34
+    }
+  },
+  "annealing": {
+    "enabled": true,
+    "label": "Stress-relief anneal",
+    "description": "Controlled ramp, soak and slow cool to relieve internal stress before the customer machines the blank.",
+    "ramp_hours": 2.0,
+    "soak_hours_per_in_thickness": 1.0,
+    "oven_rate_per_hr": 9.0,
+    "oven_rate_note": "Energy plus amortization of a used oven. Not a labor rate - nobody stands there.",
+    "batch_divisor": 3.0,
+    "batch_divisor_note": "Average number of orders sharing an oven cycle. Raise as volume grows.",
+    "handling_min": 7.0,
+    "adds_business_days": 1,
+    "blocks_lead_tiers": [
+      "SAMEDAY",
+      "RUSH24"
+    ],
+    "eligible_materials": [
+      "PEEK_NAT",
+      "PEEK_GF30",
+      "PEEK_CF30",
+      "ULTEM_1000",
+      "ULTEM_2300",
+      "PPS_TECHTRON",
+      "TORLON_4203",
+      "DELRIN_150",
+      "DELRIN_AF"
+    ],
+    "rework_reduction_factor": 0.55,
+    "rework_reduction_note": "Annealed stock relaxes before it ships, so it is materially less likely to go out of spec. This is why annealing pays for itself on PRECISION and TIGHT work."
+  },
+  "consumables": {
+    "packaging_base": 2.75,
+    "packaging_per_part": 0.45,
+    "blades": {
+      "CARBIDE_PLASTIC": {
+        "label": "80T triple-chip grind carbide, plastics geometry",
+        "blade_cost": 185.0,
+        "sharpen_cost": 45.0,
+        "n_sharpenings": 4,
+        "base_life_in": 4500.0
+      },
+      "PCD_COMPOSITE": {
+        "label": "Polycrystalline diamond, abrasive composite",
+        "blade_cost": 620.0,
+        "sharpen_cost": 180.0,
+        "n_sharpenings": 2,
+        "base_life_in": 95000.0
+      }
+    }
+  },
+  "compliance": {
+    "per_order": 4.0,
+    "per_line_item": 8.0
+  },
+  "margin_curve": {
+    "type": "piecewise_linear",
+    "note": "Continuous, NOT stepped. A step schedule is non-monotone at its boundaries: reducing COGS by a dollar can cross into a higher-margin band and raise the quoted price. Interpolating preserves the intent (small orders carry more margin) while guaranteeing price rises with cost. Verified by the tier-monotonicity sweep in the test suite.",
+    "anchors": [
+      {
+        "cogs": 0.0,
+        "margin": 0.55
+      },
+      {
+        "cogs": 150.0,
+        "margin": 0.55
+      },
+      {
+        "cogs": 400.0,
+        "margin": 0.45
+      },
+      {
+        "cogs": 1000.0,
+        "margin": 0.35
+      },
+      {
+        "cogs": 2500.0,
+        "margin": 0.28
+      },
+      {
+        "cogs": 6000.0,
+        "margin": 0.22
+      },
+      {
+        "cogs": 1000000.0,
+        "margin": 0.22
+      }
+    ]
+  },
+  "lead_tiers": {
+    "SAMEDAY": {
+      "label": "Same day",
+      "multiplier": 1.6,
+      "nest_uplift": 0.0,
+      "cutoff_local": "10:00",
+      "ship_offset_business_days": 0,
+      "allows_batching": false
+    },
+    "RUSH24": {
+      "label": "Next business day",
+      "multiplier": 1.35,
+      "nest_uplift": 0.0,
+      "cutoff_local": "14:00",
+      "ship_offset_business_days": 1,
+      "allows_batching": false
+    },
+    "RUSH48": {
+      "label": "2 business days",
+      "multiplier": 1.15,
+      "nest_uplift": 0.05,
+      "cutoff_local": "16:00",
+      "ship_offset_business_days": 2,
+      "allows_batching": true
+    },
+    "STD": {
+      "label": "3-5 business days",
+      "multiplier": 1.0,
+      "nest_uplift": 0.12,
+      "cutoff_local": "16:00",
+      "ship_offset_business_days": 4,
+      "allows_batching": true
+    },
+    "NEST": {
+      "label": "Flexible - ships when the sheet fills, up to 10 business days",
+      "multiplier": 0.85,
+      "nest_uplift": 0.25,
+      "cutoff_local": "16:00",
+      "ship_offset_business_days": 10,
+      "allows_batching": true,
+      "customer_copy": "We hold your parts until we can cut them alongside other orders on the same sheet. Less scrap, lower price, longer wait."
+    }
+  },
+  "lead_tier_note": "nest_uplift raises effective yield because batched orders share a sheet. This is the entire economic argument for the NEST tier, and it is why rush is expensive twice over: you pay the multiplier AND you forfeit the nesting bonus.",
+  "nesting": {
+    "algorithm": "guillotine_shelf_bfdh",
+    "algorithm_note": "A sliding table saw can only make edge-to-edge guillotine cuts: rip the sheet into strips, then crosscut each strip. Shelf packing is therefore not a heuristic approximation - it is the exact physical model of the machine. Do NOT substitute a free-form rectangle packer; its layouts are uncuttable on this equipment.",
+    "restarts": 240,
+    "allow_rotation": true,
+    "rotation_blocked_for_grain_sensitive": true,
+    "queue_max_age_business_days": 10,
+    "queue_group_key": [
+      "material_code",
+      "brand",
+      "thickness_nominal",
+      "certification_tier"
+    ],
+    "min_remnant_keep_in": 3.0,
+    "min_remnant_keep_note": "Drops smaller than this in either axis go to scrap, not the remnant register. Logging unusable slivers pollutes the rho_rec KPI.",
+    "target_utilization": 0.78,
+    "target_utilization_note": "UNCALIBRATED. Measure realized utilization from the first 20 nests and reset."
+  },
+  "cut_time_classes": {
+    "SOFT_THERMOPLASTIC": {
+      "c0": 0.7,
+      "c1": 1.9
+    },
+    "HIGH_PERF_UNFILLED": {
+      "c0": 0.9,
+      "c1": 2.6
+    },
+    "FILLED_REINFORCED": {
+      "c0": 1.2,
+      "c1": 3.4
+    },
+    "THERMOSET_COMPOSITE": {
+      "c0": 1.6,
+      "c1": 4.8
+    }
+  },
+  "cut_time_classes_note": "UNCALIBRATED. Fit c0/c1 per class from 27 timed cuts (3 materials x 3 thicknesses x 3 reps).",
+  "freight": {
+    "dim_divisor": 139,
+    "dim_divisor_note": "139 = UPS/FedEx retail. Improves to 166 on a negotiated contract.",
+    "box_pad_length_in": 3.0,
+    "box_pad_width_in": 3.0,
+    "box_pad_height_in": 2.5,
+    "packaging_tare_base_lb": 0.9,
+    "packaging_tare_per_sqft_lb": 0.06,
+    "handling_adder": 6.0,
+    "local_delivery": {
+      "enabled": true,
+      "zips": [
+        "92020",
+        "92021",
+        "92019",
+        "92071",
+        "92040",
+        "92064",
+        "92126",
+        "92121",
+        "92123",
+        "92111",
+        "92117",
+        "92154",
+        "92173",
+        "92011",
+        "92008",
+        "91910",
+        "91911",
+        "91913",
+        "91942",
+        "91941",
+        "91945",
+        "91977",
+        "92081",
+        "92083"
+      ],
+      "flat_rate": 18.0,
+      "free_over": 750.0,
+      "note": "Curbell's San Diego operation is in Chula Vista. El Cajon to the Miramar and north-county shops is your geographic advantage. Price local delivery to make it obvious."
+    },
+    "fallback_rate_ladder": [
+      {
+        "max_lb": 2,
+        "rate": 12.5
+      },
+      {
+        "max_lb": 5,
+        "rate": 16.0
+      },
+      {
+        "max_lb": 10,
+        "rate": 18.5
+      },
+      {
+        "max_lb": 20,
+        "rate": 26.0
+      },
+      {
+        "max_lb": 40,
+        "rate": 41.0
+      },
+      {
+        "max_lb": 70,
+        "rate": 68.0
+      },
+      {
+        "max_lb": 150,
+        "rate": 118.0
+      }
+    ],
+    "fallback_rate_note": "Replace with a live carrier API. This ladder is zone-agnostic and for development only."
+  },
+  "payments": {
+    "stripe_pct": 0.029,
+    "stripe_fixed": 0.3,
+    "gross_up_enabled": true
+  },
+  "sanity_rails": {
+    "gamma_max": 4.0,
+    "gamma_min": 1.3,
+    "gamma_note": "gamma = quoted price / pro-rata sheet fraction cost. Above max you lose to Curbell or Ready Plastics. Below min you are eating remnant risk for free."
+  },
+  "competitive_context": {
+    "curbell_fabrication_minimum": 250.0,
+    "curbell_note": "Curbell San Diego (Chula Vista, 26,000 sq ft, Onsrud router + computerized Schelling saw) publishes a $250 minimum charge on custom fabrication and sells 'CNC ready blanks'. Their cutting capability is not the weakness. Their human-gated quoting and that minimum are.",
+    "ready_plastics_note": "readyplastics.com runs this playbook nationally: 11 hubs, live inventory, certs portal, and a Tier 1 / industrial-grade split. certification_tiers is the direct response.",
+    "show_minimum_comparison_below": 250.0
+  },
+  "geometry_limits": {
+    "min_dim_in": 1.0,
+    "max_dim_in": 47.0,
+    "max_dim_note": "Bounded by slider crosscut capacity. Verify against the actual machine before launch.",
+    "min_qty": 1,
+    "max_qty_per_line": 50,
+    "max_line_items": 25,
+    "dimension_decimal_places": 3
+  },
+  "calendar": {
+    "business_days": [
+      "MO",
+      "TU",
+      "WE",
+      "TH",
+      "FR"
+    ],
+    "holidays": [
+      "2026-11-26",
+      "2026-11-27",
+      "2026-12-24",
+      "2026-12-25",
+      "2027-01-01"
+    ],
+    "composite_batch_days": [
+      "WE"
+    ],
+    "composite_batch_note": "G10/FR4 and other PCD-blade materials are cut one scheduled day per week. Off-cycle requests slip to the next batch day unless a rush tier is paid.",
+    "timezone": "America/Los_Angeles"
+  },
+  "quote": {
+    "validity_hours": 168,
+    "validity_note": "7 days. Drop to 24h for any material under distributor surcharge."
+  },
+  "materials": {
+    "PEEK_NAT": {
+      "label": "PEEK, natural (unfilled)",
+      "family": "Polyetheretherketone",
+      "density_lb_in3": 0.0473,
+      "price_per_lb": 110.0,
+      "cut_class": "HIGH_PERF_UNFILLED",
+      "abrasion": 1.0,
+      "blade_group": "CARBIDE_PLASTIC",
+      "nest_efficiency": 0.62,
+      "stock_thicknesses_in": [
+        0.125,
+        0.25,
+        0.375,
+        0.5,
+        0.75,
+        1.0,
+        1.5,
+        2.0
+      ],
+      "sheet_length_in": 48.0,
+      "sheet_width_in": 24.0,
+      "thickness_oversize_in": 0.035,
+      "residual_stress_flag": true,
+      "filled_grade": false,
+      "solvent_stress_crack_sensitive": false,
+      "grain_sensitive": false,
+      "itar_controlled": false,
+      "brands": {
+        "GENERIC": {
+          "label": "Any approved source",
+          "price_multiplier": 1.0,
+          "avl_common": false
+        },
+        "ENSINGER_TECAPEEK": {
+          "label": "Ensinger TECAPEEK natural",
+          "price_multiplier": 1.08,
+          "avl_common": true
+        },
+        "MITSUBISHI_KETRON": {
+          "label": "Mitsubishi Ketron PEEK",
+          "price_multiplier": 1.06,
+          "avl_common": true
+        },
+        "VICTREX": {
+          "label": "Victrex PEEK plate",
+          "price_multiplier": 1.12,
+          "avl_common": true
+        },
+        "ROECHLING_SUSTAPEEK": {
+          "label": "Roechling Sustapeek",
+          "price_multiplier": 1.04,
+          "avl_common": false
+        }
+      },
+      "notes": "Plate carries residual stress. Blanks may bow 0.010-0.025 in within 48h of cutting."
+    },
+    "PEEK_GF30": {
+      "label": "PEEK, 30% glass filled",
+      "family": "Polyetheretherketone",
+      "density_lb_in3": 0.0546,
+      "price_per_lb": 118.0,
+      "cut_class": "FILLED_REINFORCED",
+      "abrasion": 6.0,
+      "blade_group": "CARBIDE_PLASTIC",
+      "nest_efficiency": 0.6,
+      "stock_thicknesses_in": [
+        0.25,
+        0.5,
+        0.75,
+        1.0
+      ],
+      "sheet_length_in": 48.0,
+      "sheet_width_in": 24.0,
+      "thickness_oversize_in": 0.04,
+      "residual_stress_flag": true,
+      "filled_grade": true,
+      "solvent_stress_crack_sensitive": false,
+      "grain_sensitive": false,
+      "itar_controlled": false,
+      "brands": {
+        "GENERIC": {
+          "label": "Any approved source",
+          "price_multiplier": 1.0,
+          "avl_common": false
+        },
+        "ENSINGER_TECAPEEK": {
+          "label": "Ensinger TECAPEEK GF30",
+          "price_multiplier": 1.08,
+          "avl_common": true
+        },
+        "MITSUBISHI_KETRON": {
+          "label": "Mitsubishi Ketron GF30",
+          "price_multiplier": 1.06,
+          "avl_common": true
+        }
+      },
+      "notes": "Glass at 30% dulls carbide roughly 3-5x faster than virgin."
+    },
+    "PEEK_CF30": {
+      "label": "PEEK, 30% carbon filled",
+      "family": "Polyetheretherketone",
+      "density_lb_in3": 0.052,
+      "price_per_lb": 142.0,
+      "cut_class": "FILLED_REINFORCED",
+      "abrasion": 3.5,
+      "blade_group": "CARBIDE_PLASTIC",
+      "nest_efficiency": 0.6,
+      "stock_thicknesses_in": [
+        0.25,
+        0.5,
+        0.75,
+        1.0
+      ],
+      "sheet_length_in": 48.0,
+      "sheet_width_in": 24.0,
+      "thickness_oversize_in": 0.04,
+      "residual_stress_flag": true,
+      "filled_grade": true,
+      "solvent_stress_crack_sensitive": false,
+      "grain_sensitive": false,
+      "itar_controlled": false,
+      "brands": {
+        "GENERIC": {
+          "label": "Any approved source",
+          "price_multiplier": 1.0,
+          "avl_common": false
+        },
+        "ENSINGER_TECAPEEK": {
+          "label": "Ensinger TECAPEEK CF30",
+          "price_multiplier": 1.08,
+          "avl_common": true
+        },
+        "MITSUBISHI_KETRON": {
+          "label": "Mitsubishi Ketron CA30",
+          "price_multiplier": 1.06,
+          "avl_common": true
+        }
+      },
+      "notes": "Conductive carbon dust. Dedicated extraction; do not share a vacuum with an electronics bench."
+    },
+    "ULTEM_1000": {
+      "label": "Ultem 1000 PEI, amber",
+      "family": "Polyetherimide",
+      "density_lb_in3": 0.0459,
+      "price_per_lb": 78.0,
+      "cut_class": "HIGH_PERF_UNFILLED",
+      "abrasion": 1.0,
+      "blade_group": "CARBIDE_PLASTIC",
+      "nest_efficiency": 0.62,
+      "stock_thicknesses_in": [
+        0.125,
+        0.25,
+        0.375,
+        0.5,
+        0.75,
+        1.0,
+        1.5
+      ],
+      "sheet_length_in": 48.0,
+      "sheet_width_in": 24.0,
+      "thickness_oversize_in": 0.03,
+      "residual_stress_flag": true,
+      "filled_grade": false,
+      "solvent_stress_crack_sensitive": true,
+      "grain_sensitive": false,
+      "itar_controlled": false,
+      "brands": {
+        "GENERIC": {
+          "label": "Any approved source",
+          "price_multiplier": 1.0,
+          "avl_common": false
+        },
+        "SABIC_ULTEM": {
+          "label": "SABIC Ultem 1000",
+          "price_multiplier": 1.1,
+          "avl_common": true
+        },
+        "ENSINGER_TECAPEI": {
+          "label": "Ensinger TECAPEI",
+          "price_multiplier": 1.06,
+          "avl_common": true
+        },
+        "MITSUBISHI_DURATRON": {
+          "label": "Mitsubishi Duratron U1000",
+          "price_multiplier": 1.05,
+          "avl_common": true
+        }
+      },
+      "notes": "STRESS-CRACK SENSITIVE. No IPA, no solvent contact. Clean with DI water and lint-free only."
+    },
+    "ULTEM_2300": {
+      "label": "Ultem 2300 PEI, 30% glass filled",
+      "family": "Polyetherimide",
+      "density_lb_in3": 0.0546,
+      "price_per_lb": 92.0,
+      "cut_class": "FILLED_REINFORCED",
+      "abrasion": 6.0,
+      "blade_group": "CARBIDE_PLASTIC",
+      "nest_efficiency": 0.6,
+      "stock_thicknesses_in": [
+        0.25,
+        0.5,
+        0.75,
+        1.0
+      ],
+      "sheet_length_in": 48.0,
+      "sheet_width_in": 24.0,
+      "thickness_oversize_in": 0.04,
+      "residual_stress_flag": true,
+      "filled_grade": true,
+      "solvent_stress_crack_sensitive": true,
+      "grain_sensitive": false,
+      "itar_controlled": false,
+      "brands": {
+        "GENERIC": {
+          "label": "Any approved source",
+          "price_multiplier": 1.0,
+          "avl_common": false
+        },
+        "SABIC_ULTEM": {
+          "label": "SABIC Ultem 2300",
+          "price_multiplier": 1.1,
+          "avl_common": true
+        }
+      },
+      "notes": "Stress-crack sensitive and abrasive. Worst of both."
+    },
+    "DELRIN_150": {
+      "label": "Delrin 150 acetal homopolymer, natural",
+      "family": "Acetal",
+      "density_lb_in3": 0.0513,
+      "price_per_lb": 9.5,
+      "cut_class": "SOFT_THERMOPLASTIC",
+      "abrasion": 1.0,
+      "blade_group": "CARBIDE_PLASTIC",
+      "nest_efficiency": 0.68,
+      "stock_thicknesses_in": [
+        0.125,
+        0.25,
+        0.375,
+        0.5,
+        0.75,
+        1.0,
+        1.5,
+        2.0
+      ],
+      "sheet_length_in": 48.0,
+      "sheet_width_in": 24.0,
+      "thickness_oversize_in": 0.03,
+      "residual_stress_flag": false,
+      "filled_grade": false,
+      "solvent_stress_crack_sensitive": false,
+      "grain_sensitive": false,
+      "itar_controlled": false,
+      "brands": {
+        "GENERIC": {
+          "label": "Any approved source",
+          "price_multiplier": 1.0,
+          "avl_common": false
+        },
+        "DUPONT_DELRIN": {
+          "label": "DuPont Delrin 150",
+          "price_multiplier": 1.15,
+          "avl_common": true
+        },
+        "ENSINGER_TECAFORM": {
+          "label": "Ensinger TECAFORM AH",
+          "price_multiplier": 1.05,
+          "avl_common": true
+        }
+      },
+      "notes": "Centerline porosity risk above 2 in thickness. Flag on the quote."
+    },
+    "DELRIN_AF": {
+      "label": "Delrin AF blend, PTFE filled",
+      "family": "Acetal",
+      "density_lb_in3": 0.052,
+      "price_per_lb": 34.0,
+      "cut_class": "SOFT_THERMOPLASTIC",
+      "abrasion": 1.2,
+      "blade_group": "CARBIDE_PLASTIC",
+      "nest_efficiency": 0.66,
+      "stock_thicknesses_in": [
+        0.25,
+        0.5,
+        0.75,
+        1.0
+      ],
+      "sheet_length_in": 48.0,
+      "sheet_width_in": 24.0,
+      "thickness_oversize_in": 0.03,
+      "residual_stress_flag": false,
+      "filled_grade": true,
+      "solvent_stress_crack_sensitive": false,
+      "grain_sensitive": false,
+      "itar_controlled": false,
+      "brands": {
+        "GENERIC": {
+          "label": "Any approved source",
+          "price_multiplier": 1.0,
+          "avl_common": false
+        },
+        "DUPONT_DELRIN": {
+          "label": "DuPont Delrin AF",
+          "price_multiplier": 1.15,
+          "avl_common": true
+        }
+      },
+      "notes": ""
+    },
+    "PTFE_VIRGIN": {
+      "label": "PTFE, virgin unfilled",
+      "family": "Fluoropolymer",
+      "density_lb_in3": 0.078,
+      "price_per_lb": 24.0,
+      "cut_class": "HIGH_PERF_UNFILLED",
+      "abrasion": 1.5,
+      "blade_group": "CARBIDE_PLASTIC",
+      "nest_efficiency": 0.64,
+      "stock_thicknesses_in": [
+        0.0625,
+        0.125,
+        0.25,
+        0.375,
+        0.5,
+        0.75,
+        1.0
+      ],
+      "sheet_length_in": 48.0,
+      "sheet_width_in": 24.0,
+      "thickness_oversize_in": 0.02,
+      "residual_stress_flag": false,
+      "filled_grade": false,
+      "solvent_stress_crack_sensitive": false,
+      "grain_sensitive": false,
+      "itar_controlled": false,
+      "brands": {
+        "GENERIC": {
+          "label": "Any approved source",
+          "price_multiplier": 1.0,
+          "avl_common": false
+        }
+      },
+      "notes": "Gummy. Edges show slight fuzz as sawn; recommend the SCRAPED edge finish."
+    },
+    "PTFE_GF25": {
+      "label": "PTFE, 25% glass filled",
+      "family": "Fluoropolymer",
+      "density_lb_in3": 0.0809,
+      "price_per_lb": 31.0,
+      "cut_class": "FILLED_REINFORCED",
+      "abrasion": 4.0,
+      "blade_group": "CARBIDE_PLASTIC",
+      "nest_efficiency": 0.62,
+      "stock_thicknesses_in": [
+        0.125,
+        0.25,
+        0.5,
+        0.75,
+        1.0
+      ],
+      "sheet_length_in": 48.0,
+      "sheet_width_in": 24.0,
+      "thickness_oversize_in": 0.03,
+      "residual_stress_flag": false,
+      "filled_grade": true,
+      "solvent_stress_crack_sensitive": false,
+      "grain_sensitive": false,
+      "itar_controlled": false,
+      "brands": {
+        "GENERIC": {
+          "label": "Any approved source",
+          "price_multiplier": 1.0,
+          "avl_common": false
+        }
+      },
+      "notes": ""
+    },
+    "PPS_TECHTRON": {
+      "label": "PPS, Techtron grade",
+      "family": "Polyphenylene sulfide",
+      "density_lb_in3": 0.0488,
+      "price_per_lb": 62.0,
+      "cut_class": "HIGH_PERF_UNFILLED",
+      "abrasion": 2.0,
+      "blade_group": "CARBIDE_PLASTIC",
+      "nest_efficiency": 0.62,
+      "stock_thicknesses_in": [
+        0.25,
+        0.5,
+        0.75,
+        1.0,
+        1.5
+      ],
+      "sheet_length_in": 48.0,
+      "sheet_width_in": 24.0,
+      "thickness_oversize_in": 0.035,
+      "residual_stress_flag": true,
+      "filled_grade": false,
+      "solvent_stress_crack_sensitive": false,
+      "grain_sensitive": false,
+      "itar_controlled": false,
+      "brands": {
+        "GENERIC": {
+          "label": "Any approved source",
+          "price_multiplier": 1.0,
+          "avl_common": false
+        },
+        "MITSUBISHI_TECHTRON": {
+          "label": "Mitsubishi Techtron PPS",
+          "price_multiplier": 1.08,
+          "avl_common": true
+        }
+      },
+      "notes": ""
+    },
+    "TORLON_4203": {
+      "label": "Torlon 4203 PAI",
+      "family": "Polyamide-imide",
+      "density_lb_in3": 0.0513,
+      "price_per_lb": 320.0,
+      "cut_class": "HIGH_PERF_UNFILLED",
+      "abrasion": 2.0,
+      "blade_group": "CARBIDE_PLASTIC",
+      "nest_efficiency": 0.58,
+      "stock_thicknesses_in": [
+        0.25,
+        0.5,
+        0.75,
+        1.0
+      ],
+      "sheet_length_in": 24.0,
+      "sheet_width_in": 12.0,
+      "thickness_oversize_in": 0.04,
+      "residual_stress_flag": true,
+      "filled_grade": false,
+      "solvent_stress_crack_sensitive": false,
+      "grain_sensitive": false,
+      "itar_controlled": false,
+      "brands": {
+        "GENERIC": {
+          "label": "Any approved source",
+          "price_multiplier": 1.0,
+          "avl_common": false
+        },
+        "SOLVAY_TORLON": {
+          "label": "Solvay Torlon 4203",
+          "price_multiplier": 1.12,
+          "avl_common": true
+        }
+      },
+      "notes": "Extremely high value. Confirm distributor stock before promising a date."
+    },
+    "G10_FR4": {
+      "label": "G10/FR4 glass epoxy laminate",
+      "family": "Thermoset composite",
+      "density_lb_in3": 0.065,
+      "price_per_lb": 14.0,
+      "cut_class": "THERMOSET_COMPOSITE",
+      "abrasion": 12.0,
+      "blade_group": "PCD_COMPOSITE",
+      "nest_efficiency": 0.7,
+      "stock_thicknesses_in": [
+        0.0625,
+        0.125,
+        0.1875,
+        0.25,
+        0.375,
+        0.5,
+        0.75,
+        1.0
+      ],
+      "sheet_length_in": 48.0,
+      "sheet_width_in": 36.0,
+      "thickness_oversize_in": 0.015,
+      "residual_stress_flag": false,
+      "filled_grade": true,
+      "solvent_stress_crack_sensitive": false,
+      "grain_sensitive": true,
+      "itar_controlled": false,
+      "grain_note": "Woven glass has a warp direction. Do not rotate parts in the nester unless the customer waives orientation.",
+      "brands": {
+        "GENERIC": {
+          "label": "Any approved source",
+          "price_multiplier": 1.0,
+          "avl_common": false
+        }
+      },
+      "notes": "Respirable glass/epoxy dust. Local exhaust plus P100. Batch to the scheduled composite day."
+    }
+  }
+}
