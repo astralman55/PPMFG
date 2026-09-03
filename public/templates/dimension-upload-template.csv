@@ -1,0 +1,3 @@
+part_ref,material_code,brand,certification_tier,length_in,width_in,thickness_in,qty,tolerance_tier,edge_finish
+BRKT-001,PEEK_NAT,ENSINGER_TECAPEEK,TIER1_TRACEABLE,12,12,0.5,1,STANDARD,DEBURRED
+SPCR-002,ULTEM_1000,GENERIC,INDUSTRIAL,6,4,0.25,10,STANDARD,CHAMFERED
