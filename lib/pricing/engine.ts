@@ -218,6 +218,17 @@ export interface PricingConfig {
       customer_copy?: string;
     }
   >;
+  /** Not read by the pricing engine itself - used by lib/pricing/nesting.ts. */
+  nesting: {
+    algorithm: string;
+    restarts: number;
+    allow_rotation: boolean;
+    rotation_blocked_for_grain_sensitive: boolean;
+    queue_max_age_business_days: number;
+    queue_group_key: string[];
+    min_remnant_keep_in: number;
+    target_utilization: number;
+  };
   cut_time_classes: Record<string, { c0: number; c1: number }>;
   freight: {
     dim_divisor: number;
