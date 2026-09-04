@@ -189,18 +189,12 @@ export function InvoiceDocument(props: InvoiceProps) {
         <View style={styles.totals}>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Subtotal (goods)</Text>
-            <Text style={styles.totalValue}>{money(quote.totals.subtotal_goods)}</Text>
+            <Text style={styles.totalValue}>{money(quote.totals.subtotal_goods + processingAdder)}</Text>
           </View>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Shipping</Text>
             <Text style={styles.totalValue}>{money(quote.totals.shipping)}</Text>
           </View>
-          {processingAdder > 0.005 ? (
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Card processing</Text>
-              <Text style={styles.totalValue}>{money(processingAdder)}</Text>
-            </View>
-          ) : null}
           {taxDollars > 0.005 ? (
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Tax</Text>
