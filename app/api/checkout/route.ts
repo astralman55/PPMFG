@@ -53,6 +53,16 @@ export async function POST(req: Request): Promise<Response> {
   const order_number = generateOrderNumber();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin;
 
+  // total_cents already includes the card-processing gross-up from the
+  // pricing engine (config.json payments.gross_up_enabled), so the goods and
+  // shipping line items sent to Stripe must sum to total_cents, not to
+  // subtotal_cents + shipping_cents - otherwise the amount actually charged
+  // comes in short of what the quote displayed, and the shop nets less than
+  // intended on every card sale. Folded into the goods line rather than
+  // shown as a separate "card fee" line item - a labeled surcharge is
+  // regulated in several US states.
+  const goodsAmountCents = quoteRow.total_cents - quoteRow.shipping_cents;
+
   const stripe = getStripe();
   let session;
   try {
@@ -63,7 +73,7 @@ export async function POST(req: Request): Promise<Response> {
           price_data: {
             currency: "usd",
             product_data: { name: "Engineering plastics order" },
-            unit_amount: quoteRow.subtotal_cents,
+            unit_amount: goodsAmountCents,
           },
           quantity: 1,
         },

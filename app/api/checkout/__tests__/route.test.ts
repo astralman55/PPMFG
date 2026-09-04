@@ -64,8 +64,15 @@ describe("POST /api/checkout", () => {
 
     expect(createMock).toHaveBeenCalledTimes(1);
     const args = createMock.mock.calls[0][0];
-    expect(args.line_items[0].price_data.unit_amount).toBe(Math.round(quote.totals.subtotal_goods * 100));
-    expect(args.line_items[1].price_data.unit_amount).toBe(Math.round(quote.totals.shipping * 100));
+    // The two line items must sum to total_cents (which already includes
+    // the card-processing gross-up), not to subtotal_goods + shipping -
+    // otherwise the amount actually charged falls short of the quoted total.
+    const shippingCents = Math.round(quote.totals.shipping * 100);
+    expect(args.line_items[1].price_data.unit_amount).toBe(shippingCents);
+    expect(args.line_items[0].price_data.unit_amount).toBe(quote.totals.total_cents - shippingCents);
+    expect(args.line_items[0].price_data.unit_amount + args.line_items[1].price_data.unit_amount).toBe(
+      quote.totals.total_cents
+    );
     expect(args.mode).toBe("payment");
     expect(args.automatic_tax).toEqual({ enabled: true });
     expect(args.customer_creation).toBe("always");
