@@ -66,17 +66,26 @@ function money(n: number): string {
   return n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 }
 
+/** What /api/quote returns: the engine's result plus persistence fields. */
+type QuoteApiResult = QuoteResult & { quote_id: string; expires_at: string };
+
 export default function QuotePage() {
   const [form, setForm] = useState<FormState>(initialState);
   const [brandExpanded, setBrandExpanded] = useState(false);
   const [selectedTier, setSelectedTier] = useState<string>("STD");
-  const [results, setResults] = useState<Partial<Record<string, QuoteResult>>>({});
+  const [results, setResults] = useState<Partial<Record<string, QuoteApiResult>>>({});
   const [apiError, setApiError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const [uploadLines, setUploadLines] = useState<LineItemInput[]>([]);
   const [uploadErrors, setUploadErrors] = useState<{ row: number; message: string }[]>([]);
   const [uploadNotice, setUploadNotice] = useState<string | null>(null);
+
+  const [checkoutEmail, setCheckoutEmail] = useState("");
+  const [checkoutCompany, setCheckoutCompany] = useState("");
+  const [checkoutPo, setCheckoutPo] = useState("");
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   const material = CFG.materials[form.materialCode];
   const { value: length, error: lengthError } = parseDim(form.lengthRaw);
@@ -157,7 +166,7 @@ export default function QuotePage() {
           });
           const data = await res.json();
           if (!res.ok) throw new Error(data.error ?? `Pricing failed (${res.status}).`);
-          return [tier, data as QuoteResult] as const;
+          return [tier, data as QuoteApiResult] as const;
         })
       )
         .then((entries) => {
@@ -184,6 +193,34 @@ export default function QuotePage() {
   }, [payloadKey]);
 
   const selected = results[selectedTier];
+
+  async function handleCheckout() {
+    if (!selected) return;
+    setCheckoutError(null);
+    setCheckoutLoading(true);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          quote_id: selected.quote_id,
+          email: checkoutEmail,
+          company: checkoutCompany || null,
+          customer_po: checkoutPo || null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setCheckoutError(data.error ?? `Could not start checkout (${res.status}).`);
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      setCheckoutError("Could not reach the payment server.");
+    } finally {
+      setCheckoutLoading(false);
+    }
+  }
 
   async function handleUpload(file: File) {
     setUploadNotice(null);
@@ -558,6 +595,47 @@ export default function QuotePage() {
                 ))}
               </ul>
             )}
+
+            <div className="mt-4 space-y-3 border-t border-neutral-300 pt-4 dark:border-neutral-700">
+              <label className="flex flex-col gap-1 text-sm">
+                Email
+                <input
+                  type="email"
+                  required
+                  className="rounded border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
+                  value={checkoutEmail}
+                  onChange={(e) => setCheckoutEmail(e.target.value)}
+                  placeholder="you@yourshop.com"
+                />
+              </label>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <label className="flex flex-col gap-1 text-sm">
+                  Company (optional)
+                  <input
+                    className="rounded border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
+                    value={checkoutCompany}
+                    onChange={(e) => setCheckoutCompany(e.target.value)}
+                  />
+                </label>
+                <label className="flex flex-col gap-1 text-sm">
+                  Purchase order number (optional)
+                  <input
+                    className="rounded border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
+                    value={checkoutPo}
+                    onChange={(e) => setCheckoutPo(e.target.value)}
+                  />
+                </label>
+              </div>
+              {checkoutError && <p className="text-sm text-red-600">{checkoutError}</p>}
+              <button
+                type="button"
+                disabled={!checkoutEmail || checkoutLoading}
+                onClick={() => void handleCheckout()}
+                className="rounded bg-amber-700 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-amber-600"
+              >
+                {checkoutLoading ? "Starting checkout..." : "Continue to payment"}
+              </button>
+            </div>
           </div>
         )}
       </section>

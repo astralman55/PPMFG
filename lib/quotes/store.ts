@@ -69,3 +69,40 @@ export async function saveQuote(row: NewQuoteRow, validityHours: number): Promis
   memoryStore.set(id, full);
   return full;
 }
+
+/** Reads a quote by id, or null if it doesn't exist. */
+export async function getQuote(id: string): Promise<QuoteRow | null> {
+  if (supabaseConfigured()) {
+    const sb = getSupabaseAdmin();
+    const { data, error } = await sb.from("quotes").select("*").eq("id", id).maybeSingle();
+    if (error) throw new Error(`Failed to load quote: ${error.message}`);
+    return (data as QuoteRow) ?? null;
+  }
+  return memoryStore.get(id) ?? null;
+}
+
+/**
+ * Marks a quote consumed, but only if it hasn't been already - guards
+ * against two concurrent checkout attempts on the same quote. Returns false
+ * if the quote was already consumed (or doesn't exist).
+ */
+export async function markQuoteConsumed(id: string): Promise<boolean> {
+  const consumed_at = new Date().toISOString();
+
+  if (supabaseConfigured()) {
+    const sb = getSupabaseAdmin();
+    const { data, error } = await sb
+      .from("quotes")
+      .update({ consumed_at })
+      .eq("id", id)
+      .is("consumed_at", null)
+      .select("id");
+    if (error) throw new Error(`Failed to mark quote consumed: ${error.message}`);
+    return (data?.length ?? 0) > 0;
+  }
+
+  const row = memoryStore.get(id);
+  if (!row || row.consumed_at !== null) return false;
+  row.consumed_at = consumed_at;
+  return true;
+}
