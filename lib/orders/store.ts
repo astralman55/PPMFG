@@ -236,6 +236,11 @@ export async function markOrderCertified(id: string, packetPath: string): Promis
   return updateOrder(id, { status: "certified", packet_path: packetPath });
 }
 
+/** Records where the Stage-1 invoice PDF was archived, so ops can pull it back up later. */
+export async function setInvoicePath(id: string, invoicePath: string): Promise<OrderRow> {
+  return updateOrder(id, { invoice_path: invoicePath });
+}
+
 /**
  * Marks an order shipped. Callers MUST have already enforced the hard block
  * from CLAUDE_CODE_BRIEF.md §9 ("an order cannot be marked shipped until

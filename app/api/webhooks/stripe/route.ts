@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe, stripeConfigured } from "@/lib/stripe/client";
-import { recordWebhookEventIfNew, upsertCustomer, createOrder, type OrderRow } from "@/lib/orders/store";
+import { recordWebhookEventIfNew, upsertCustomer, createOrder, setInvoicePath, type OrderRow } from "@/lib/orders/store";
 import { createOrderLines, linesFromQuoteResult } from "@/lib/orders/lines-store";
 import { getQuote, type QuoteRow } from "@/lib/quotes/store";
 import { renderInvoicePdf, type InvoiceShipAddress } from "@/lib/docs/invoice";
 import { orderConfirmationEmail } from "@/lib/email/order-confirmation";
 import { getResend, resendConfigured, getFromAddress } from "@/lib/email/client";
+import { uploadPrivateFile } from "@/lib/supabase/storage";
 import type { QuoteResult } from "@/lib/pricing/engine";
 
 /**
@@ -146,13 +147,6 @@ async function sendStage1Confirmation(args: {
     console.warn(`[webhook] order ${order.order_number} has no customer email; skipping the Stage-1 email.`);
     return;
   }
-  if (!resendConfigured()) {
-    console.warn(
-      `[webhook] order ${order.order_number} was created but RESEND_API_KEY is not configured yet, so no ` +
-        "confirmation email was sent (see CLAUDE_CODE_BRIEF.md §13)."
-    );
-    return;
-  }
 
   const quoteResult = quote.result_json as QuoteResult;
   const orderStatusUrl = `${siteUrl}/order/confirmed?session_id=${order.stripe_session_id}`;
@@ -169,6 +163,25 @@ async function sendStage1Confirmation(args: {
     amountPaidCents: order.amount_paid_cents,
     taxCents: order.tax_cents,
   });
+
+  // Archived independently of whether email sending is configured, so the
+  // ops console can pull the invoice back up even if Resend isn't set up yet.
+  try {
+    const invoicePath = `${order.order_number}.pdf`;
+    await uploadPrivateFile("invoices", invoicePath, pdf, "application/pdf", { upsert: true });
+    await setInvoicePath(order.id, invoicePath);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(`[webhook] order ${order.order_number}'s invoice PDF failed to archive to storage: ${message}`);
+  }
+
+  if (!resendConfigured()) {
+    console.warn(
+      `[webhook] order ${order.order_number} was created but RESEND_API_KEY is not configured yet, so no ` +
+        "confirmation email was sent (see CLAUDE_CODE_BRIEF.md §13)."
+    );
+    return;
+  }
 
   const { subject, html, text } = orderConfirmationEmail({
     orderNumber: order.order_number,

@@ -45,6 +45,7 @@ interface OrderDetail {
     customer_po: string | null;
     tracking_number: string | null;
     carrier: string | null;
+    invoice_path: string | null;
   };
   customer: { email: string; company: string | null } | null;
   lines: OrderLine[];
@@ -76,6 +77,15 @@ export default function FulfilmentPage({ params }: { params: Promise<{ id: strin
       <h1 className="text-xl font-semibold font-mono">{order.order_number}</h1>
       <p className="mt-1 text-sm text-neutral-500">
         {customer?.company || customer?.email} - status: {order.status} - promised ship {order.promised_ship_date ?? "TBD"}
+      </p>
+      <p className="mt-2 text-sm">
+        {order.invoice_path ? (
+          <a href={`/api/ops/orders/${id}/invoice`} target="_blank" rel="noreferrer" className="text-amber-700 hover:underline dark:text-amber-500">
+            View original invoice
+          </a>
+        ) : (
+          <span className="text-neutral-400">No invoice archived for this order.</span>
+        )}
       </p>
       {notice ? <p className="mt-3 text-sm text-green-700 dark:text-green-500">{notice}</p> : null}
 

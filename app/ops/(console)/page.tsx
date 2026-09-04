@@ -10,6 +10,7 @@ interface QueueOrder {
   promised_ship_date: string | null;
   customer_po: string | null;
   amount_paid_cents: number;
+  invoice_path: string | null;
 }
 
 function daysUntil(dateStr: string | null): number | null {
@@ -56,6 +57,7 @@ export default function OpsQueuePage() {
               <th className="py-2 pr-4">Promised ship</th>
               <th className="py-2 pr-4">PO</th>
               <th className="py-2 pr-4">Paid</th>
+              <th className="py-2 pr-4">Invoice</th>
             </tr>
           </thead>
           <tbody>
@@ -75,6 +77,20 @@ export default function OpsQueuePage() {
                   </td>
                   <td className="py-2 pr-4">{o.customer_po ?? "—"}</td>
                   <td className="py-2 pr-4 font-mono tabular-nums">${(o.amount_paid_cents / 100).toFixed(2)}</td>
+                  <td className="py-2 pr-4">
+                    {o.invoice_path ? (
+                      <a
+                        href={`/api/ops/orders/${o.id}/invoice`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-amber-700 hover:underline dark:text-amber-500"
+                      >
+                        View
+                      </a>
+                    ) : (
+                      <span className="text-neutral-400">—</span>
+                    )}
+                  </td>
                 </tr>
               );
             })}

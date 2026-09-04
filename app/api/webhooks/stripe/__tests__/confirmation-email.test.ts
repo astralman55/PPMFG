@@ -92,6 +92,21 @@ describe("POST /api/webhooks/stripe - Stage-1 confirmation email", () => {
     expect(Buffer.isBuffer(pdfBuffer)).toBe(true);
     expect(pdfBuffer.subarray(0, 5).toString("latin1")).toBe("%PDF-");
     expect(pdfBuffer.length).toBeGreaterThan(1000);
+
+    // The same invoice is also archived to storage, independent of email
+    // sending, so ops can pull it back up later - see app/api/ops/orders/[id]/invoice.
+    const { getOrderBySessionId } = await import("@/lib/orders/store");
+    const order = await getOrderBySessionId("cs_test_email_1");
+    expect(order?.invoice_path).toBe("ORD-20260903-EMAIL1.pdf");
+
+    const { downloadPrivateFile } = await import("@/lib/supabase/storage");
+    const archived = await downloadPrivateFile("invoices", order!.invoice_path!);
+    expect(archived.subarray(0, 5).toString("latin1")).toBe("%PDF-");
+
+    const { GET: invoiceGet } = await import("../../../ops/orders/[id]/invoice/route");
+    const invoiceRes = await invoiceGet(new Request("http://localhost"), { params: Promise.resolve({ id: order!.id }) });
+    expect(invoiceRes.status).toBe(307);
+    expect(invoiceRes.headers.get("location")).toContain("invoices");
   });
 
   test("replaying the same webhook event sends no second email", async () => {
