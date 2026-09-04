@@ -67,9 +67,7 @@ describe("POST /api/checkout", () => {
     expect(args.line_items[0].price_data.unit_amount).toBe(Math.round(quote.totals.subtotal_goods * 100));
     expect(args.line_items[1].price_data.unit_amount).toBe(Math.round(quote.totals.shipping * 100));
     expect(args.mode).toBe("payment");
-    // Temporarily disabled - see the TODO at the top of route.ts. Stripe's
-    // automatic tax needs a business address the owner hasn't set up yet.
-    expect(args.automatic_tax).toEqual({ enabled: false });
+    expect(args.automatic_tax).toEqual({ enabled: true });
     expect(args.customer_creation).toBe("always");
     expect(args.shipping_address_collection).toEqual({ allowed_countries: ["US"] });
     expect(args.custom_fields[0].key).toBe("purchase_order_number");

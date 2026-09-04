@@ -4,21 +4,10 @@ import { CheckoutRequestSchema } from "@/lib/validation/checkout";
 import { getQuote, markQuoteConsumed } from "@/lib/quotes/store";
 import { generateOrderNumber } from "@/lib/orders/order-number";
 
-/**
- * ============================================================================
- * TODO(owner, before any REAL customer pays): re-enable automatic tax.
- * ============================================================================
- * Stripe's automatic_tax requires a business address on file at
- * dashboard.stripe.com/test/settings/tax, which needs the owner's Stripe
- * business profile finished first (in progress as of this commit - see
- * chat). Disabled here ONLY so the checkout + webhook + idempotency
- * mechanism can be tested end to end in the meantime. This is a compliance
- * gap, not a missing feature: shipping a live order with no sales tax
- * collected is a real problem, not a cosmetic one. Flip AUTOMATIC_TAX_ENABLED
- * back to true - and run one more real test purchase to confirm tax now
- * calculates - before taking a non-test payment.
- */
-const AUTOMATIC_TAX_ENABLED = false;
+// Automatic tax needs a business address on file in Stripe's tax settings
+// (dashboard.stripe.com/test/settings/tax) - the owner added that, verified
+// live below, so this is back on.
+const AUTOMATIC_TAX_ENABLED = true;
 
 /**
  * Starts a Stripe Checkout session. Accepts ONLY quote_id, email, company
