@@ -138,6 +138,19 @@ export async function upsertCustomer(input: CustomerInput): Promise<CustomerRow>
   return row;
 }
 
+export async function getCustomer(id: string): Promise<CustomerRow | null> {
+  if (supabaseConfigured()) {
+    const sb = getSupabaseAdmin();
+    const { data, error } = await sb.from("customers").select("*").eq("id", id).maybeSingle();
+    if (error) throw new Error(`Failed to load customer: ${error.message}`);
+    return (data as CustomerRow) ?? null;
+  }
+  for (const customer of memoryCustomersByEmail.values()) {
+    if (customer.id === id) return customer;
+  }
+  return null;
+}
+
 // ---------------------------------------------------------------------------
 // Orders
 // ---------------------------------------------------------------------------
@@ -178,6 +191,67 @@ export async function getOrderBySessionId(stripeSessionId: string): Promise<Orde
     return (data as OrderRow) ?? null;
   }
   return memoryOrdersBySession.get(stripeSessionId) ?? null;
+}
+
+/** Reads an order by its own id (the ops console's primary lookup), or null if none exists. */
+export async function getOrderById(id: string): Promise<OrderRow | null> {
+  if (supabaseConfigured()) {
+    const sb = getSupabaseAdmin();
+    const { data, error } = await sb.from("orders").select("*").eq("id", id).maybeSingle();
+    if (error) throw new Error(`Failed to load order: ${error.message}`);
+    return (data as OrderRow) ?? null;
+  }
+  for (const order of memoryOrdersBySession.values()) {
+    if (order.id === id) return order;
+  }
+  return null;
+}
+
+/** Every order, newest first - the ops queue's data source. */
+export async function listOrders(): Promise<OrderRow[]> {
+  if (supabaseConfigured()) {
+    const sb = getSupabaseAdmin();
+    const { data, error } = await sb.from("orders").select("*").order("created_at", { ascending: false });
+    if (error) throw new Error(`Failed to list orders: ${error.message}`);
+    return (data as OrderRow[]) ?? [];
+  }
+  return Array.from(memoryOrdersBySession.values()).sort((a, b) => b.created_at.localeCompare(a.created_at));
+}
+
+async function updateOrder(id: string, patch: Partial<OrderRow>): Promise<OrderRow> {
+  if (supabaseConfigured()) {
+    const sb = getSupabaseAdmin();
+    const { data, error } = await sb.from("orders").update(patch).eq("id", id).select().single();
+    if (error) throw new Error(`Failed to update order: ${error.message}`);
+    return data as OrderRow;
+  }
+  const existing = await getOrderById(id);
+  if (!existing) throw new Error(`Order ${id} does not exist.`);
+  Object.assign(existing, patch);
+  return existing;
+}
+
+/** Records where the merged Certification Packet landed and marks the order certified. */
+export async function markOrderCertified(id: string, packetPath: string): Promise<OrderRow> {
+  return updateOrder(id, { status: "certified", packet_path: packetPath });
+}
+
+/**
+ * Marks an order shipped. Callers MUST have already enforced the hard block
+ * from CLAUDE_CODE_BRIEF.md §9 ("an order cannot be marked shipped until
+ * every line has a lot_id and that lot has an mtr_path") before calling this
+ * - see assertOrderReadyToCertify in lib/orders/lines-store.ts.
+ */
+export async function markOrderShipped(
+  id: string,
+  info: { tracking_number: string; carrier: string }
+): Promise<OrderRow> {
+  return updateOrder(id, {
+    status: "shipped",
+    tracking_number: info.tracking_number,
+    carrier: info.carrier,
+    shipped_at: new Date().toISOString(),
+  });
 }
 
 /**

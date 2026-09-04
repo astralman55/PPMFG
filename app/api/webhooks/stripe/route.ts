@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe, stripeConfigured } from "@/lib/stripe/client";
 import { recordWebhookEventIfNew, upsertCustomer, createOrder, type OrderRow } from "@/lib/orders/store";
+import { createOrderLines, linesFromQuoteResult } from "@/lib/orders/lines-store";
 import { getQuote, type QuoteRow } from "@/lib/quotes/store";
 import { renderInvoicePdf, type InvoiceShipAddress } from "@/lib/docs/invoice";
 import { orderConfirmationEmail } from "@/lib/email/order-confirmation";
@@ -92,6 +93,24 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, siteUrl
     tax_cents: session.total_details?.amount_tax ?? 0,
     promised_ship_date: quote?.promised_ship_date ?? null,
   });
+
+  // Materialise the quote's line items into real order_lines rows - nothing
+  // did this before Phase 6, and fulfilment (assigning a lot, measured
+  // thickness, cutter, inspector to each physical piece cut) needs a real
+  // row per line to attach that data to.
+  if (quote) {
+    try {
+      await createOrderLines(linesFromQuoteResult(order.id, quote.result_json as QuoteResult));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`[webhook] order ${orderNumber} was created but its order_lines failed to save: ${message}`);
+    }
+  } else {
+    console.warn(
+      `[webhook] order ${orderNumber} has no matching quote record, so no order_lines were created - it can't ` +
+        "be fulfilled until lines are added for it by hand."
+    );
+  }
 
   // The order is already paid and saved at this point - a failure sending the
   // confirmation email must never look like a failure to Stripe (which would
