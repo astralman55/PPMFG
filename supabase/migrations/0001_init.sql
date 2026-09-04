@@ -1,8 +1,5 @@
 -- Initial schema for the fractional-cut plastics storefront.
 -- Source: CLAUDE_CODE_BRIEF.md §6 DATA MODEL.
--- NOT YET APPLIED. Run this against a real Supabase project only after
--- reviewing it and confirming RLS policies separately — this file defines
--- tables only, per the brief's Phase 0 scope.
 
 create table quotes (
   id uuid primary key default gen_random_uuid(),
@@ -114,3 +111,26 @@ create table webhook_events (
   id text primary key, type text not null,
   processed_at timestamptz not null default now()
 );
+
+-- Row Level Security, on every table, per CLAUDE_CODE_BRIEF.md §6: "RLS on
+-- every table, all writes through the service-role key server-side. The
+-- browser never holds a service key."
+--
+-- No policies are defined below, deliberately. The service-role key (used
+-- exclusively by lib/supabase/admin.ts, server-side only) bypasses RLS
+-- entirely by design, so it is unaffected by any of this. With RLS enabled
+-- and zero policies, every other key - including the public anon key that
+-- ships to the browser in NEXT_PUBLIC_SUPABASE_ANON_KEY - can read or write
+-- nothing at all. That is correct for the current architecture: the
+-- browser never talks to Supabase directly, only through this app's own
+-- API routes. If a future phase needs the browser to query Supabase
+-- directly (customer-portal order lookups, for instance), add narrow,
+-- explicit policies then - don't disable RLS to get there.
+alter table quotes enable row level security;
+alter table customers enable row level security;
+alter table orders enable row level security;
+alter table lots enable row level security;
+alter table order_lines enable row level security;
+alter table nest_runs enable row level security;
+alter table remnants enable row level security;
+alter table webhook_events enable row level security;
