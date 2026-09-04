@@ -9,4 +9,13 @@ export default defineConfig({
       "@": path.resolve(__dirname, "."),
     },
   },
+  // tsconfig.json sets jsx: "preserve" because Next's own compiler owns the
+  // JSX transform at build/dev time. Vitest doesn't go through Next's
+  // compiler, so it needs to be told explicitly to use the same automatic
+  // runtime Next uses - otherwise esbuild falls back to the classic
+  // React.createElement transform, which fails at test time since no file
+  // in this codebase imports React by convention.
+  esbuild: {
+    jsx: "automatic",
+  },
 });

@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe, stripeConfigured } from "@/lib/stripe/client";
-import { recordWebhookEventIfNew, upsertCustomer, createOrder } from "@/lib/orders/store";
-import { getQuote } from "@/lib/quotes/store";
+import { recordWebhookEventIfNew, upsertCustomer, createOrder, type OrderRow } from "@/lib/orders/store";
+import { getQuote, type QuoteRow } from "@/lib/quotes/store";
+import { renderInvoicePdf, type InvoiceShipAddress } from "@/lib/docs/invoice";
+import { orderConfirmationEmail } from "@/lib/email/order-confirmation";
+import { getResend, resendConfigured, getFromAddress } from "@/lib/email/client";
+import type { QuoteResult } from "@/lib/pricing/engine";
 
 /**
  * Stripe webhook receiver. Reads the raw body BEFORE parsing (required for
@@ -42,13 +46,14 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   if (event.type === "checkout.session.completed") {
-    await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin;
+    await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session, siteUrl);
   }
 
   return NextResponse.json({ received: true });
 }
 
-async function handleCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {
+async function handleCheckoutCompleted(session: Stripe.Checkout.Session, siteUrl: string): Promise<void> {
   const quoteId = session.metadata?.quote_id ?? null;
   const orderNumber = session.metadata?.order_number;
   if (!orderNumber) {
@@ -75,7 +80,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session): Promis
   const paymentIntentId =
     typeof session.payment_intent === "string" ? session.payment_intent : (session.payment_intent?.id ?? null);
 
-  await createOrder({
+  const order = await createOrder({
     order_number: orderNumber,
     quote_id: quoteId,
     customer_id: customer.id,
@@ -87,4 +92,88 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session): Promis
     tax_cents: session.total_details?.amount_tax ?? 0,
     promised_ship_date: quote?.promised_ship_date ?? null,
   });
+
+  // The order is already paid and saved at this point - a failure sending the
+  // confirmation email must never look like a failure to Stripe (which would
+  // trigger a retry that skips re-creating the order, since the event id is
+  // already recorded above, but would also never retry the email). Log
+  // loudly instead so it's visible in server logs for a manual resend.
+  try {
+    await sendStage1Confirmation({ order, quote, email, company: customer.company, address, siteUrl });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(`[webhook] order ${orderNumber} was created but the Stage-1 confirmation email failed: ${message}`);
+  }
+}
+
+async function sendStage1Confirmation(args: {
+  order: OrderRow;
+  quote: QuoteRow | null;
+  email: string;
+  company: string | null;
+  address: InvoiceShipAddress | null;
+  siteUrl: string;
+}): Promise<void> {
+  const { order, quote, email, company, address, siteUrl } = args;
+
+  if (!quote) {
+    console.warn(
+      `[webhook] order ${order.order_number} has no matching quote record; skipping the Stage-1 email ` +
+        "(the priced quote it was built from is no longer available, so a correct invoice can't be built)."
+    );
+    return;
+  }
+  if (!email) {
+    console.warn(`[webhook] order ${order.order_number} has no customer email; skipping the Stage-1 email.`);
+    return;
+  }
+  if (!resendConfigured()) {
+    console.warn(
+      `[webhook] order ${order.order_number} was created but RESEND_API_KEY is not configured yet, so no ` +
+        "confirmation email was sent (see CLAUDE_CODE_BRIEF.md §13)."
+    );
+    return;
+  }
+
+  const quoteResult = quote.result_json as QuoteResult;
+  const orderStatusUrl = `${siteUrl}/order/confirmed?session_id=${order.stripe_session_id}`;
+
+  const pdf = await renderInvoicePdf({
+    orderNumber: order.order_number,
+    createdAt: order.created_at,
+    customerPo: order.customer_po,
+    promisedShipDate: order.promised_ship_date,
+    customerEmail: email,
+    customerCompany: company,
+    shipAddress: address,
+    quote: quoteResult,
+    amountPaidCents: order.amount_paid_cents,
+    taxCents: order.tax_cents,
+  });
+
+  const { subject, html, text } = orderConfirmationEmail({
+    orderNumber: order.order_number,
+    promisedShipDate: order.promised_ship_date,
+    customerEmail: email,
+    orderStatusUrl,
+    amountPaidCents: order.amount_paid_cents,
+  });
+
+  const resend = getResend();
+  const { error } = await resend.emails.send({
+    from: getFromAddress(),
+    to: email,
+    subject,
+    html,
+    text,
+    attachments: [
+      {
+        filename: `invoice-${order.order_number}.pdf`,
+        content: pdf,
+      },
+    ],
+  });
+  if (error) {
+    throw new Error(`Resend rejected the confirmation email: ${error.message}`);
+  }
 }
