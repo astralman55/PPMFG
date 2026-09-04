@@ -49,47 +49,57 @@ export async function POST(req: Request): Promise<Response> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin;
 
   const stripe = getStripe();
-  const session = await stripe.checkout.sessions.create({
-    mode: "payment",
-    line_items: [
-      {
-        price_data: {
-          currency: "usd",
-          product_data: { name: "Engineering plastics order" },
-          unit_amount: quoteRow.subtotal_cents,
+  let session;
+  try {
+    session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: { name: "Engineering plastics order" },
+            unit_amount: quoteRow.subtotal_cents,
+          },
+          quantity: 1,
         },
-        quantity: 1,
-      },
-      {
-        price_data: {
-          currency: "usd",
-          product_data: { name: "Shipping" },
-          unit_amount: quoteRow.shipping_cents,
+        {
+          price_data: {
+            currency: "usd",
+            product_data: { name: "Shipping" },
+            unit_amount: quoteRow.shipping_cents,
+          },
+          quantity: 1,
         },
-        quantity: 1,
+      ],
+      automatic_tax: { enabled: true },
+      customer_creation: "always",
+      customer_email: email,
+      shipping_address_collection: { allowed_countries: ["US"] },
+      custom_fields: [
+        {
+          key: "purchase_order_number",
+          label: { type: "custom", custom: "Purchase order number" },
+          type: "text",
+          optional: true,
+          text: { default_value: customer_po || undefined },
+        },
+      ],
+      metadata: {
+        quote_id,
+        order_number,
+        company: company ?? "",
       },
-    ],
-    automatic_tax: { enabled: true },
-    customer_creation: "always",
-    customer_email: email,
-    shipping_address_collection: { allowed_countries: ["US"] },
-    custom_fields: [
-      {
-        key: "purchase_order_number",
-        label: { type: "custom", custom: "Purchase order number" },
-        type: "text",
-        optional: true,
-        text: { default_value: customer_po || undefined },
-      },
-    ],
-    metadata: {
-      quote_id,
-      order_number,
-      company: company ?? "",
-    },
-    success_url: `${siteUrl}/order/confirmed?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${siteUrl}/quote`,
-  });
+      success_url: `${siteUrl}/order/confirmed?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${siteUrl}/quote`,
+    });
+  } catch (err) {
+    // Stripe rejects the request itself (e.g. account setup incomplete,
+    // like automatic tax needing a business address on file) - surface
+    // that plainly instead of a raw framework crash.
+    const message = err instanceof Error ? err.message : "Stripe rejected this checkout request.";
+    console.error(`[checkout] Stripe session creation failed for quote ${quote_id}: ${message}`);
+    return NextResponse.json({ error: `Could not start checkout: ${message}` }, { status: 502 });
+  }
 
   const wasConsumed = await markQuoteConsumed(quote_id);
   if (!wasConsumed) {

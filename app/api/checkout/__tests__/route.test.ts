@@ -84,6 +84,15 @@ describe("POST /api/checkout", () => {
     expect(second.status).toBe(409);
   });
 
+  test("fails cleanly (not a crash) when Stripe rejects the session request", async () => {
+    createMock.mockRejectedValueOnce(new Error("You must have a valid head office address to enable automatic tax calculation in test mode."));
+    const quote = await makeQuote();
+    const res = await postCheckout({ quote_id: quote.quote_id, email: "buyer@example.com" });
+    expect(res.status).toBe(502);
+    const body = await res.json();
+    expect(body.error).toContain("head office address");
+  });
+
   test("rejects an unknown quote_id", async () => {
     const res = await postCheckout({ quote_id: "00000000-0000-0000-0000-000000000000", email: "buyer@example.com" });
     expect(res.status).toBe(404);
