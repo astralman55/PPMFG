@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import cfgJson from "@/lib/pricing/config.json";
 import { parse_fraction_input, DimensionInputError } from "@/lib/pricing/fractions";
 import type { PricingConfig, QuoteResult, LineItemInput } from "@/lib/pricing/engine";
@@ -36,16 +37,25 @@ interface FormState {
   destZip: string;
 }
 
-function initialState(): FormState {
+/**
+ * Seeds the form from the landing page's hero, which hands off the line the
+ * visitor already priced there via query params (?material=&length=&width=
+ * &thickness=&qty=&tolerance=) so "continue to full quote" doesn't throw
+ * away what they just entered - CLAUDE_CODE_BRIEF.md §11's copy rule "an
+ * action keeps its name through the whole flow" applies to the data too.
+ */
+function initialState(params?: URLSearchParams | null): FormState {
+  const material = params?.get("material");
+  const materialCode = material && material in CFG.materials ? material : DEFAULT_MATERIAL;
   return {
-    materialCode: DEFAULT_MATERIAL,
+    materialCode,
     brand: "GENERIC",
     certTier: "TIER1_TRACEABLE",
-    lengthRaw: "12",
-    widthRaw: "12",
-    thickness: defaultThickness(DEFAULT_MATERIAL),
-    qty: 1,
-    toleranceTier: "STANDARD",
+    lengthRaw: params?.get("length") || "12",
+    widthRaw: params?.get("width") || "12",
+    thickness: Number(params?.get("thickness")) || defaultThickness(materialCode),
+    qty: Number(params?.get("qty")) || 1,
+    toleranceTier: params?.get("tolerance") || "STANDARD",
     edgeFinish: "DEBURRED",
     faceFinish: "AS_SUPPLIED",
     anneal: false,
@@ -70,7 +80,16 @@ function money(n: number): string {
 type QuoteApiResult = QuoteResult & { quote_id: string; expires_at: string };
 
 export default function QuotePage() {
-  const [form, setForm] = useState<FormState>(initialState);
+  return (
+    <Suspense fallback={null}>
+      <QuoteForm />
+    </Suspense>
+  );
+}
+
+function QuoteForm() {
+  const searchParams = useSearchParams();
+  const [form, setForm] = useState<FormState>(() => initialState(searchParams));
   const [brandExpanded, setBrandExpanded] = useState(false);
   const [selectedTier, setSelectedTier] = useState<string>("STD");
   const [results, setResults] = useState<Partial<Record<string, QuoteApiResult>>>({});

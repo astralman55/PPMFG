@@ -1,26 +1,46 @@
 @import "tailwindcss";
 
+/*
+ * Palette and type from CLAUDE_CODE_BRIEF.md §11 - "drawn from the
+ * materials rather than a template." amber is reserved for the live price
+ * and the primary action only; everything else stays quiet.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-paper: #fcfcfa;
+  --color-ink: #14181c;
+  --color-graphite: #6b7280;
+  --color-rule: #e3e3de;
+  --color-amber: #b8710f;
+
+  --color-swatch-peek: #e8e0ce;
+  --color-swatch-ultem: #c88a2e;
+  --color-swatch-delrin: #f4f4f2;
+  --color-swatch-delrin-af: #1c1c1c;
+  --color-swatch-g10: #5f7a3e;
+  --color-swatch-ptfe: #f0eee8;
+  --color-swatch-pps: #b8ab98;
+  --color-swatch-torlon: #c9a66b;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-paper: var(--color-paper);
+  --color-ink: var(--color-ink);
+  --color-graphite: var(--color-graphite);
+  --color-rule: var(--color-rule);
+  --color-amber: var(--color-amber);
+  --font-sans: var(--font-archivo);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-archivo), Arial, Helvetica, sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
