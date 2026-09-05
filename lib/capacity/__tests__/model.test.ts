@@ -93,13 +93,25 @@ describe("buildCapacityQueue", () => {
   });
 });
 
+function queueLine(overrides: Partial<CapacityQueueLine>): CapacityQueueLine {
+  return {
+    order_id: "o1",
+    order_number: "ORD-1",
+    customer_label: "Acme",
+    line_no: 1,
+    promised_ship_date: "2026-09-15",
+    minutes: 30,
+    group_key: "A",
+    needs_composite_day: false,
+    ...overrides,
+  };
+}
+
 describe("runCapacityWalk", () => {
   const TODAY = "2026-09-03"; // a Thursday
 
   test("a single small line on a single order is on track when there's ample budget", () => {
-    const queueLines: CapacityQueueLine[] = [
-      { order_id: "o1", order_number: "ORD-1", customer_label: "Acme", line_no: 1, promised_ship_date: "2026-09-15", minutes: 30, group_key: "A" },
-    ];
+    const queueLines: CapacityQueueLine[] = [queueLine({})];
     const result = runCapacityWalk(queueLines, { today: TODAY, availableMinutesPerDay: 450 }, CFG);
     expect(result.orders).toHaveLength(1);
     expect(result.orders[0].status).toBe("on_track");
@@ -111,7 +123,7 @@ describe("runCapacityWalk", () => {
     // 5000 minutes needs ~12 business days at 450/day; promising it in ~4
     // business days from a Thursday start cannot possibly land in time.
     const queueLines: CapacityQueueLine[] = [
-      { order_id: "big", order_number: "ORD-BIG", customer_label: "Big Co", line_no: 1, promised_ship_date: "2026-09-08", minutes: 5000, group_key: "A" },
+      queueLine({ order_id: "big", order_number: "ORD-BIG", customer_label: "Big Co", promised_ship_date: "2026-09-08", minutes: 5000 }),
     ];
     const result = runCapacityWalk(queueLines, { today: TODAY, availableMinutesPerDay: 450 }, CFG);
     const big = result.orders.find((o) => o.order_id === "big")!;
@@ -121,8 +133,8 @@ describe("runCapacityWalk", () => {
 
   test("queuing a huge order ahead of a small one by an earlier promised date can push the small one to at risk too", () => {
     const queueLines: CapacityQueueLine[] = [
-      { order_id: "big", order_number: "ORD-BIG", customer_label: "Big Co", line_no: 1, promised_ship_date: "2026-09-04", minutes: 5000, group_key: "A" },
-      { order_id: "small", order_number: "ORD-SMALL", customer_label: "Small Co", line_no: 1, promised_ship_date: "2026-09-10", minutes: 30, group_key: "B" },
+      queueLine({ order_id: "big", order_number: "ORD-BIG", customer_label: "Big Co", promised_ship_date: "2026-09-04", minutes: 5000, group_key: "A" }),
+      queueLine({ order_id: "small", order_number: "ORD-SMALL", customer_label: "Small Co", promised_ship_date: "2026-09-10", minutes: 30, group_key: "B" }),
     ];
     const result = runCapacityWalk(queueLines, { today: TODAY, availableMinutesPerDay: 450 }, CFG);
     const big = result.orders.find((o) => o.order_id === "big")!;
@@ -133,25 +145,19 @@ describe("runCapacityWalk", () => {
 
   test("blade changes are charged once per distinct group across the whole queue, not once per line", () => {
     const queueLines: CapacityQueueLine[] = [
-      { order_id: "o1", order_number: "ORD-1", customer_label: "A", line_no: 1, promised_ship_date: "2026-09-10", minutes: 20, group_key: "SAME" },
-      { order_id: "o1", order_number: "ORD-1", customer_label: "A", line_no: 2, promised_ship_date: "2026-09-10", minutes: 20, group_key: "SAME" },
-      { order_id: "o2", order_number: "ORD-2", customer_label: "B", line_no: 1, promised_ship_date: "2026-09-11", minutes: 20, group_key: "SAME" },
-      { order_id: "o3", order_number: "ORD-3", customer_label: "C", line_no: 1, promised_ship_date: "2026-09-12", minutes: 20, group_key: "DIFFERENT" },
+      queueLine({ order_id: "o1", order_number: "ORD-1", customer_label: "A", line_no: 1, promised_ship_date: "2026-09-10", minutes: 20, group_key: "SAME" }),
+      queueLine({ order_id: "o1", order_number: "ORD-1", customer_label: "A", line_no: 2, promised_ship_date: "2026-09-10", minutes: 20, group_key: "SAME" }),
+      queueLine({ order_id: "o2", order_number: "ORD-2", customer_label: "B", line_no: 1, promised_ship_date: "2026-09-11", minutes: 20, group_key: "SAME" }),
+      queueLine({ order_id: "o3", order_number: "ORD-3", customer_label: "C", line_no: 1, promised_ship_date: "2026-09-12", minutes: 20, group_key: "DIFFERENT" }),
     ];
     const result = runCapacityWalk(queueLines, { today: TODAY, availableMinutesPerDay: 450 }, CFG);
     expect(result.total_blade_changes).toBe(2); // "SAME" once, "DIFFERENT" once
   });
 
   test("the per-day table's minutes never exceed the available budget except for a single line that alone is bigger than a day", () => {
-    const queueLines: CapacityQueueLine[] = Array.from({ length: 10 }, (_, i) => ({
-      order_id: `o${i}`,
-      order_number: `ORD-${i}`,
-      customer_label: "A",
-      line_no: 1,
-      promised_ship_date: "2026-09-20",
-      minutes: 100,
-      group_key: "A",
-    }));
+    const queueLines: CapacityQueueLine[] = Array.from({ length: 10 }, (_, i) =>
+      queueLine({ order_id: `o${i}`, order_number: `ORD-${i}`, promised_ship_date: "2026-09-20", minutes: 100 })
+    );
     const result = runCapacityWalk(queueLines, { today: TODAY, availableMinutesPerDay: 450 }, CFG);
     for (const day of result.days) {
       expect(day.minutes_consumed).toBeLessThanOrEqual(450 + 1e-6);
@@ -159,9 +165,7 @@ describe("runCapacityWalk", () => {
   });
 
   test("a line whose own minutes exceed a single day's budget spills across multiple consecutive business days", () => {
-    const queueLines: CapacityQueueLine[] = [
-      { order_id: "o1", order_number: "ORD-1", customer_label: "A", line_no: 1, promised_ship_date: "2026-09-15", minutes: 900, group_key: "A" },
-    ];
+    const queueLines: CapacityQueueLine[] = [queueLine({ promised_ship_date: "2026-09-15", minutes: 900 })];
     const result = runCapacityWalk(queueLines, { today: TODAY, availableMinutesPerDay: 450 }, CFG);
     expect(result.days.length).toBeGreaterThanOrEqual(2);
     for (const day of result.days) {
@@ -179,13 +183,65 @@ describe("runCapacityWalk", () => {
   });
 
   test("the walk starts on a business day even if 'today' is a weekend", () => {
-    const queueLines: CapacityQueueLine[] = [
-      { order_id: "o1", order_number: "ORD-1", customer_label: "A", line_no: 1, promised_ship_date: "2026-09-15", minutes: 30, group_key: "A" },
-    ];
+    const queueLines: CapacityQueueLine[] = [queueLine({ promised_ship_date: "2026-09-15", minutes: 30 })];
     // 2026-09-05 is a Saturday.
     const result = runCapacityWalk(queueLines, { today: "2026-09-05", availableMinutesPerDay: 450 }, CFG);
     const weekdayCode = new Date(`${result.days[0].date}T00:00:00Z`).getUTCDay();
     expect(weekdayCode).not.toBe(0); // not Sunday
     expect(weekdayCode).not.toBe(6); // not Saturday
+  });
+
+  describe("composite batch-day rule", () => {
+    // TODAY (2026-09-03) is a Thursday; config's only composite batch day is
+    // Wednesday - the next one from a Thursday start is 2026-09-09.
+    const NEXT_WEDNESDAY = "2026-09-09";
+
+    test("a composite-material line is never scheduled on a non-batch day", () => {
+      const queueLines: CapacityQueueLine[] = [
+        queueLine({ promised_ship_date: "2026-09-20", minutes: 30, needs_composite_day: true }),
+      ];
+      const result = runCapacityWalk(queueLines, { today: TODAY, availableMinutesPerDay: 450 }, CFG);
+      expect(result.days).toHaveLength(1);
+      expect(result.days[0].date).toBe(NEXT_WEDNESDAY);
+    });
+
+    test("an ordinary line queued right behind a composite line is unaffected by the batch-day wait", () => {
+      // Same order_id would confuse "scheduled_through," so use two orders.
+      const queueLines: CapacityQueueLine[] = [
+        queueLine({ order_id: "composite", order_number: "ORD-COMPOSITE", promised_ship_date: "2026-09-04", minutes: 30, group_key: "G10", needs_composite_day: true }),
+        queueLine({ order_id: "ordinary", order_number: "ORD-ORDINARY", promised_ship_date: "2026-09-05", minutes: 30, group_key: "PEEK", needs_composite_day: false }),
+      ];
+      const result = runCapacityWalk(queueLines, { today: TODAY, availableMinutesPerDay: 450 }, CFG);
+      const ordinary = result.orders.find((o) => o.order_id === "ordinary")!;
+      // The ordinary line is walked second (later ship date) but does NOT
+      // inherit the composite line's wait for Wednesday - the shared cursor
+      // only advances once the composite line's own consumption moves it.
+      expect(ordinary.scheduled_through <= NEXT_WEDNESDAY).toBe(true);
+    });
+
+    test("a composite order promised before the next batch day is flagged at risk", () => {
+      const queueLines: CapacityQueueLine[] = [
+        // Promised for tomorrow (Friday) - but the next batch day is the
+        // following Wednesday, so this cannot possibly land on time.
+        queueLine({ promised_ship_date: "2026-09-04", minutes: 30, needs_composite_day: true }),
+      ];
+      const result = runCapacityWalk(queueLines, { today: TODAY, availableMinutesPerDay: 450 }, CFG);
+      expect(result.orders[0].status).toBe("at_risk");
+    });
+
+    test("the blade change for a composite line is attributed to the batch day it actually lands on, not the day it was queued", () => {
+      const queueLines: CapacityQueueLine[] = [
+        queueLine({ promised_ship_date: "2026-09-20", minutes: 30, group_key: "G10", needs_composite_day: true }),
+      ];
+      const result = runCapacityWalk(queueLines, { today: TODAY, availableMinutesPerDay: 450 }, CFG);
+      expect(result.days[0].date).toBe(NEXT_WEDNESDAY);
+      expect(result.days[0].blade_changes).toBe(1);
+    });
+
+    test("a non-composite queue is completely unaffected by the batch-day rule", () => {
+      const queueLines: CapacityQueueLine[] = [queueLine({ promised_ship_date: "2026-09-15", minutes: 30, needs_composite_day: false })];
+      const result = runCapacityWalk(queueLines, { today: TODAY, availableMinutesPerDay: 450 }, CFG);
+      expect(result.days[0].date).toBe(TODAY);
+    });
   });
 });

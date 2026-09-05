@@ -37,6 +37,8 @@ export interface CapacityQueueLine {
   promised_ship_date: string;
   minutes: number;
   group_key: string;
+  /** True for materials in the PCD_COMPOSITE blade group (currently just G10/FR4) - see §21.4/isCompositeBatchDay. */
+  needs_composite_day: boolean;
 }
 
 export interface MinutesComputeFailure {
@@ -53,6 +55,22 @@ export interface BuildQueueResult {
 
 function round2(n: number): number {
   return Math.round((n + Number.EPSILON) * 100) / 100;
+}
+
+const WEEKDAY_CODES = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
+
+/**
+ * True if `iso` is one of cfg.calendar.composite_batch_days (e.g. "WE") -
+ * mirrors engine.ts's own private weekday_code(), which isn't exported.
+ */
+function isCompositeBatchDay(iso: string, cfg: PricingConfig): boolean {
+  const code = WEEKDAY_CODES[new Date(`${iso}T00:00:00Z`).getUTCDay()];
+  return cfg.calendar.composite_batch_days.includes(code);
+}
+
+/** Mirrors engine.ts's own needs_composite_day check (mat.blade_group === "PCD_COMPOSITE"). */
+export function needsCompositeDay(materialCode: string, cfg: PricingConfig): boolean {
+  return cfg.materials[materialCode]?.blade_group === "PCD_COMPOSITE";
 }
 
 /**
@@ -126,6 +144,7 @@ export function buildCapacityQueue(rows: CapacityLineInput[], cfg: PricingConfig
         promised_ship_date: row.promised_ship_date,
         minutes: round2(minutes),
         group_key: groupKeyFor(row, cfg),
+        needs_composite_day: needsCompositeDay(row.material_code, cfg),
       });
     } catch (e) {
       failures.push({
@@ -171,7 +190,10 @@ export interface CapacityWalkResult {
  * order, consuming a fixed per-day minute budget; a blade change is charged
  * the first time (and only the first time) each group is encountered. A
  * job bigger than one day's budget genuinely spills across several
- * consecutive business days rather than overflowing a single day.
+ * consecutive business days rather than overflowing a single day. Composite
+ * materials (needs_composite_day) only ever get minutes on a configured
+ * composite batch day - see consume()'s docstring for what that does and
+ * does not model.
  *
  * An order is "at risk" if any minutes belonging to it land on a day
  * strictly after its promised_ship_date; the shortfall is the total minutes
@@ -215,10 +237,36 @@ export function runCapacityWalk(
    * Consumes `minutesNeeded` against the day budget, spilling into
    * subsequent business days as needed - a job bigger than one day's budget
    * genuinely occupies several days, it doesn't just overflow the first one.
+   *
+   * If `line.needs_composite_day` is set, no minutes for it are placed on
+   * any day that isn't a configured composite batch day (§21.4/config.json's
+   * calendar.composite_batch_days) - real composite-material cutting only
+   * happens on those days. This is a single shared calendar cursor, not a
+   * full multi-resource scheduler: it does NOT backfill the business days
+   * skipped while waiting for a batch day with other, non-composite work
+   * later in the queue. That makes the walk conservative (it can show a
+   * later finish than a perfectly optimised real schedule would achieve)
+   * but never optimistic, which is the safe direction for a deadline-risk
+   * warning.
+   *
+   * `onFirstChunk` fires once, the moment the first minute of this call is
+   * actually placed - used to attribute a blade change to the day it truly
+   * lands on, even if that's after skipping ahead to a batch day.
    */
-  function consume(minutesNeeded: number, line: CapacityQueueLine) {
+  function consume(minutesNeeded: number, line: CapacityQueueLine, onFirstChunk?: () => void) {
     let need = minutesNeeded;
+    let firstChunkPlaced = false;
     while (need > 0) {
+      if (line.needs_composite_day && !isCompositeBatchDay(currentDate, cfg)) {
+        if (minutesUsedToday > 0) closeDay();
+        do {
+          currentDate = add_business_days(currentDate, 1, cfg);
+        } while (!isCompositeBatchDay(currentDate, cfg));
+        minutesUsedToday = 0;
+        bladeChangesToday = 0;
+        orderNumbersToday = new Set<string>();
+        continue;
+      }
       const capacityLeft = opts.availableMinutesPerDay - minutesUsedToday;
       if (capacityLeft <= 0) {
         closeDay();
@@ -231,6 +279,10 @@ export function runCapacityWalk(
       const chunk = Math.min(need, capacityLeft);
       minutesUsedToday += chunk;
       need -= chunk;
+      if (!firstChunkPlaced) {
+        firstChunkPlaced = true;
+        onFirstChunk?.();
+      }
       orderNumbersToday.add(line.order_number);
       lastDayForOrder.set(line.order_id, currentDate);
       if (currentDate > line.promised_ship_date) {
@@ -251,8 +303,9 @@ export function runCapacityWalk(
     const isNewGroup = !chargedGroups.has(line.group_key);
     if (isNewGroup) {
       chargedGroups.add(line.group_key);
-      bladeChangesToday += 1;
-      consume(bladeMinutes, line);
+      consume(bladeMinutes, line, () => {
+        bladeChangesToday += 1;
+      });
     }
     consume(line.minutes, line);
   }

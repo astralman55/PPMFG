@@ -7,6 +7,7 @@ import { add_business_days } from "@/lib/pricing/engine";
 import {
   computeLineMinutes,
   groupKeyFor,
+  needsCompositeDay,
   runCapacityWalk,
   type CapacityLineInput,
   type CapacityQueueLine,
@@ -127,6 +128,7 @@ export default function CapacityPage() {
         promised_ship_date: row.promised_ship_date,
         minutes: computeLineMinutes(row, CFG),
         group_key: groupKeyFor(row, CFG),
+        needs_composite_day: needsCompositeDay(row.material_code, CFG),
       };
     } catch (e) {
       setHypoError(e instanceof Error ? e.message : "Could not price this hypothetical part.");
