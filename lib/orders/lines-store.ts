@@ -38,6 +38,7 @@ export interface OrderLineRow extends NewOrderLineRow {
   cut_by: string | null;
   cut_at: string | null;
   inspected_by: string | null;
+  nest_run_id: string | null;
 }
 
 const memoryLinesByOrder = new Map<string, OrderLineRow[]>();
@@ -92,10 +93,53 @@ export async function createOrderLines(rows: NewOrderLineRow[]): Promise<OrderLi
     cut_by: null,
     cut_at: null,
     inspected_by: null,
+    nest_run_id: null,
   }));
   const existing = memoryLinesByOrder.get(rows[0].order_id) ?? [];
   memoryLinesByOrder.set(rows[0].order_id, [...existing, ...full]);
   return full;
+}
+
+/**
+ * Every not-yet-nested line across all orders - the nest board's queue
+ * (CLAUDE_CODE_BRIEF.md §10). Excludes lines already claimed by a committed
+ * nest run (nest_run_id set) AND lines already lot-assigned outside the
+ * nest board (lot_id set, e.g. a one-off order fulfilled directly) - either
+ * one means it's no longer "pending cut." A line can have nest_run_id set
+ * with lot_id still null: the nest run fixed which physical lot is being
+ * cut, but the per-piece measured thickness/cutter/inspector are still
+ * recorded afterward through the ordinary fulfilment flow.
+ */
+export async function listPendingCutLines(): Promise<OrderLineRow[]> {
+  if (supabaseConfigured()) {
+    const sb = getSupabaseAdmin();
+    const { data, error } = await sb.from("order_lines").select("*").is("lot_id", null).is("nest_run_id", null);
+    if (error) throw new Error(`Failed to list pending-cut lines: ${error.message}`);
+    return (data as OrderLineRow[]) ?? [];
+  }
+  const all: OrderLineRow[] = [];
+  for (const lines of memoryLinesByOrder.values()) {
+    all.push(...lines.filter((l) => l.lot_id === null && l.nest_run_id === null));
+  }
+  return all;
+}
+
+/** Marks lines as claimed by a committed nest run - see lib/nesting/commit.ts. */
+export async function markLinesNested(lineIds: string[], nestRunId: string): Promise<void> {
+  if (lineIds.length === 0) return;
+
+  if (supabaseConfigured()) {
+    const sb = getSupabaseAdmin();
+    const { error } = await sb.from("order_lines").update({ nest_run_id: nestRunId }).in("id", lineIds);
+    if (error) throw new Error(`Failed to mark lines nested: ${error.message}`);
+    return;
+  }
+
+  for (const lines of memoryLinesByOrder.values()) {
+    for (const line of lines) {
+      if (lineIds.includes(line.id)) line.nest_run_id = nestRunId;
+    }
+  }
 }
 
 export async function getOrderLines(orderId: string): Promise<OrderLineRow[]> {

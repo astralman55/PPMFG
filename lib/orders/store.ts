@@ -236,6 +236,11 @@ export async function markOrderCertified(id: string, packetPath: string): Promis
   return updateOrder(id, { status: "certified", packet_path: packetPath });
 }
 
+/** An order's material has been nested and cut - see lib/nesting/commit.ts. */
+export async function setOrderInProduction(id: string): Promise<OrderRow> {
+  return updateOrder(id, { status: "in_production" });
+}
+
 /** Records where the Stage-1 invoice PDF was archived, so ops can pull it back up later. */
 export async function setInvoicePath(id: string, invoicePath: string): Promise<OrderRow> {
   return updateOrder(id, { invoice_path: invoicePath });

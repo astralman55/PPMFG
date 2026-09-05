@@ -1219,6 +1219,23 @@ export function add_business_days(start: string, n: number, cfg: PricingConfig):
   return d;
 }
 
+/**
+ * Business days elapsed from `start` to `end` (both "YYYY-MM-DD"), using the
+ * same calendar as add_business_days - the nest board's "oldest order age
+ * against queue_max_age_business_days" (CLAUDE_CODE_BRIEF.md §10) needs the
+ * inverse of that function.
+ */
+export function count_business_days(start: string, end: string, cfg: PricingConfig): number {
+  if (end <= start) return 0;
+  let d = start;
+  let count = 0;
+  while (d < end) {
+    d = add_days_iso(d, 1);
+    if (is_business_day(d, cfg)) count += 1;
+  }
+  return count;
+}
+
 interface LeadTimeResult {
   order_date: string;
   cutoff_local: string;

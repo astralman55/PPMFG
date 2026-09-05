@@ -17,6 +17,15 @@ export default function OpsLayout({ children }: { children: ReactNode }) {
           <Link href="/ops/lots" className="hover:underline">
             Lot library
           </Link>
+          <Link href="/ops/nest" className="hover:underline">
+            Nest board
+          </Link>
+          <Link href="/ops/remnants" className="hover:underline">
+            Remnants
+          </Link>
+          <Link href="/ops/calibration" className="hover:underline">
+            Calibration
+          </Link>
         </div>
         <SignOutButton />
       </nav>
