@@ -124,6 +124,30 @@ export async function listPendingCutLines(): Promise<OrderLineRow[]> {
   return all;
 }
 
+/**
+ * Every line belonging to the given orders, regardless of cut status - the
+ * capacity dashboard's raw material (CLAUDE_CODE_BRIEF.md §21.1). Unlike
+ * listPendingCutLines(), this does NOT filter by lot_id/nest_run_id; the
+ * caller decides what "still needs saw time" means for its own purpose.
+ */
+export async function listOrderLinesForOrders(orderIds: string[]): Promise<OrderLineRow[]> {
+  if (orderIds.length === 0) return [];
+
+  if (supabaseConfigured()) {
+    const sb = getSupabaseAdmin();
+    const { data, error } = await sb.from("order_lines").select("*").in("order_id", orderIds);
+    if (error) throw new Error(`Failed to list order lines: ${error.message}`);
+    return (data as OrderLineRow[]) ?? [];
+  }
+
+  const ids = new Set(orderIds);
+  const all: OrderLineRow[] = [];
+  for (const [orderId, lines] of memoryLinesByOrder.entries()) {
+    if (ids.has(orderId)) all.push(...lines);
+  }
+  return all;
+}
+
 /** Marks lines as claimed by a committed nest run - see lib/nesting/commit.ts. */
 export async function markLinesNested(lineIds: string[], nestRunId: string): Promise<void> {
   if (lineIds.length === 0) return;

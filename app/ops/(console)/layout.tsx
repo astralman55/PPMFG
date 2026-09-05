@@ -26,6 +26,9 @@ export default function OpsLayout({ children }: { children: ReactNode }) {
           <Link href="/ops/calibration" className="hover:underline">
             Calibration
           </Link>
+          <Link href="/ops/capacity" className="hover:underline">
+            Capacity
+          </Link>
         </div>
         <SignOutButton />
       </nav>

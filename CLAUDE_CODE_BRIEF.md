@@ -727,6 +727,7 @@ Stripe retries; double-sending an invoice is a support nightmare.
 | **10** | Homepage restructure modeled on Nox Metals, per §18 | Eight-section homepage; no fabricated logos/certifications/AI claims |
 | **11** | Solo cut-layout diagram at quote time, per §19 | Diagram for 5× 12×3 parts on a 36×24 sheet, with sheet count and utilisation; no DB write |
 | **12** | Live diagram in the quote builder, per-material/thickness sheet sizing, collapsible specs/PO sections, email-a-quote, per §20 | Diagram updates live with material/thickness; sample `QuoteSummary` PDF |
+| **13** | Capacity & deadline dashboard inside `/ops`, per §21 | Real unfulfilled queue auto-populates; at least one at-risk order flagged with its shortfall; hypothetical order shows its effect before quoting |
 
 ---
 
@@ -1508,3 +1509,127 @@ without scrolling once a valid price has resolved.
       invoice, including an explicit "Quote — not a bill" marker
 - [ ] Resending the same quote within the cooldown window is blocked with a
       clear message, not a silent failure
+
+---
+
+## 21. PHASE 13 — CAPACITY & DEADLINE DASHBOARD (INSIDE /ops)
+
+This turns a standalone capacity planner into a live screen inside the
+existing operator console, fed automatically from real unfulfilled orders
+instead of hand-typed rows.
+
+### Where this lives, and why not a "secrets folder"
+
+This is a new route at `/ops/capacity`, behind the same Supabase Auth
+middleware guard that already protects every other `/ops` page. It is not a
+secret in the API-key sense — it's a real page with real UI, just restricted
+to the one admin login. `.env.local` and any "secrets" directory are for
+credentials only (Stripe keys, database keys) and should never contain a
+feature or a page. Keep that boundary clean: if a page like this ever ends up
+inside a directory meant for secrets, something has gone wrong with the
+project structure.
+
+### What this screen does
+
+Three related but distinct calculations, all read-only, all recomputed live
+from real data — nothing here writes to the database.
+
+#### 21.1 — Pull the real unfulfilled queue
+
+Query `orders` joined to `order_lines` for every order where
+`status NOT IN ('shipped', 'cancelled')`. For each line, you already have
+everything needed to compute labor time: `material_code`, `brand`,
+`length_in`, `width_in`, `thickness_nominal`, `qty`, `tolerance_tier`,
+`edge_finish`, `face_finish`, `annealed`, and the parent order's
+`promised_ship_date`.
+
+#### 21.2 — Recompute labor time fresh, not from the frozen quote
+
+**Important distinction from how pricing works elsewhere in this system.**
+Quotes are immutable price snapshots — `quotes.result_json` is never
+recalculated, because a customer paid a specific number and that number must
+never drift. Capacity planning is the opposite: you want the *current best
+estimate* of how long a cut will actually take, using whatever calibration is
+live in `config.json` today.
+
+So: call `lib/pricing/engine.ts`'s labor and cut-time functions **fresh**, at
+read time, using each line's stored specs against the *current* config. This
+means when you run the stopwatch calibration protocol and update `c0`/`c1`,
+every open order's time estimate improves automatically — you never have to
+touch old order rows.
+
+#### 21.3 — Group blade changes exactly like the nest board does
+
+An unfulfilled queue of thirty lines does not mean thirty blade changes. Reuse
+the exact grouping logic already built in `lib/pricing/nesting.ts`
+(`group_queue`, keyed on `material_code, brand, thickness_nominal,
+certification_tier`) to determine how many *actual* blade changeovers the
+remaining work requires — one per blade group encountered, not one per line.
+This is the same principle the standalone calculator used, now driven by real
+grouped data instead of hand-typed rows.
+
+#### 21.4 — Walk the calendar forward against promised ship dates
+
+This is the actual deadline back-calculation:
+
+1. Sort all open order lines by the parent order's `promised_ship_date`,
+   soonest first.
+2. Starting from today, walk forward day by day using the same business-day
+   calendar already built for lead time (`add_business_days`, respecting
+   holidays and the composite batch-day rule).
+3. Each day has a configurable available-minutes budget (default 450, editable
+   on this screen, not in `config.json` — this is a staffing input, not a
+   pricing constant).
+4. Consume that budget with the queued labor minutes, in ship-date order,
+   charging blade changeovers per §21.3 as new material groups are encountered
+   each day.
+5. For every order, determine: does its cumulative labor land on or before its
+   `promised_ship_date` given this walk? Mark it **on track** or **at risk**.
+
+This produces the actual answer to "can we hit what we've promised," not just
+"is today full."
+
+#### 21.5 — The screen
+
+- **Top summary bar:** total open orders, total labor-minutes remaining,
+  number at risk, nearest at-risk deadline.
+- **Per-day table** from the calendar walk: date, orders scheduled that day,
+  minutes consumed, minutes remaining, blade changes charged that day.
+- **At-risk order list**, sorted by promised date: order number, customer,
+  ship date, and how many minutes short the walk landed.
+- **Editable "available minutes per day" field** — let the owner model "what
+  if I worked a 10-hour day this week" without touching any config file.
+- **A manual "add hypothetical order" row**, reusing the exact same input UI
+  as the standalone calculator from Phase 12 — lets the owner test "if I say
+  yes to this new rush order today, does anything already promised slip?"
+  *before* quoting it to the customer.
+
+### What this screen must not do
+
+- Must not write to `orders`, `order_lines`, or any pricing table. It reads
+  and displays; it never mutates.
+- Must not change any customer-facing price. This is an internal staffing
+  tool, full stop.
+- Must not be reachable outside the `/ops` auth boundary.
+- Must not recompute or override `quotes.result_json` — the frozen price a
+  customer already paid is untouched by anything on this screen.
+
+### Definition of done — Phase 13
+
+- [ ] `/ops/capacity` is reachable only when authenticated as the ops admin
+- [ ] The queue auto-populates from real `orders`/`order_lines` where status
+      is not shipped or cancelled — no manual entry required to see today's
+      real picture
+- [ ] Labor minutes are computed fresh from current `config.json`, not from
+      any frozen quote snapshot
+- [ ] Blade changeovers are counted per material group across the whole
+      queue, not per line
+- [ ] The calendar walk respects business days, holidays, and the composite
+      batch-day rule already defined for lead time
+- [ ] At least one order with a promised date the walk cannot meet is clearly
+      flagged as at-risk, with the shortfall shown in minutes
+- [ ] The "available minutes per day" field is editable on-screen and
+      recalculates everything live, without touching any file
+- [ ] Adding a hypothetical order shows its effect on existing promises
+      before it's ever quoted to a real customer
+- [ ] No database write occurs anywhere on this screen
