@@ -725,6 +725,8 @@ Stripe retries; double-sending an invoice is a support nightmare.
 | **8** | Landing page per §11 | Screenshot review, mobile and desktop |
 | **9** | Material library: `/materials` grid + detail pages + `/learn` articles, per §17 | Grid and a detail page generated entirely from `config.json`; images sourced honestly or clearly flagged as placeholder |
 | **10** | Homepage restructure modeled on Nox Metals, per §18 | Eight-section homepage; no fabricated logos/certifications/AI claims |
+| **11** | Solo cut-layout diagram at quote time, per §19 | Diagram for 5× 12×3 parts on a 36×24 sheet, with sheet count and utilisation; no DB write |
+| **12** | Live diagram in the quote builder, per-material/thickness sheet sizing, collapsible specs/PO sections, email-a-quote, per §20 | Diagram updates live with material/thickness; sample `QuoteSummary` PDF |
 
 ---
 
@@ -1126,3 +1128,382 @@ actually exists. Do not fabricate compliance language in the footer.
 - [ ] Footer contact details are real, not placeholder text
 - [ ] Design system (palette, type, motion) from Phase 8 is unchanged — this
       phase restructures sections, it does not introduce a new visual language
+
+---
+
+## 19. PHASE 11 — CUT LAYOUT VISUALIZATION AT QUOTE TIME
+
+Adds a real cut-layout diagram to the quote result, using the same nesting
+engine already built in Phase 2 — called in "solo mode" against only the
+current customer's own line items.
+
+### The problem this solves, and the limit it respects
+
+Customers who cut sheet stock for a living want to see the thing before they
+buy it: how many sheets, how the parts sit, how much is left over. Interstate
+Plastics and others publish standalone "yield calculators" that do exactly
+this, and it is a legitimate, well-understood feature category — not a novelty.
+
+But there is a hard limit, and this phase must not cross it: **the diagram
+shown at quote time can only reflect this customer's own parts, alone on a
+fresh sheet.** It cannot reflect real cross-order batching, because the other
+orders that would eventually share a sheet do not exist yet when this customer
+is quoting. Any diagram implying otherwise is a claim about the future dressed
+up as a fact about the present.
+
+This creates two genuinely different things, and the UI must keep them visibly
+separate:
+
+1. **The solo diagram** — real, exact, computed live from this order alone.
+   "Here is how your parts fit on our stock sheet, and how many sheets you
+   need." Always accurate. Always buildable. Build it now.
+2. **The NEST tier's statistical uplift** — already priced into the engine via
+   `nest_uplift` in config.json. This is a *claim about expected future
+   batching*, not a picture of a specific sheet. It stays a number and a
+   sentence, never a diagram, because a diagram implies a specific layout that
+   doesn't exist yet.
+
+Do not build a single combined view that blurs these. A customer who reads the
+solo diagram as "this is what happens to my parts" and separately reads "choose
+NEST and we'll batch you with others to cut cost" understands both truthfully.
+A single diagram trying to show both would have to either fabricate other
+orders or silently omit the batching benefit — both are worse than two honest,
+separate answers.
+
+### 19.1 — Solo nest call
+
+In the quote API (`/api/quote`), after pricing is computed, call
+`lib/pricing/nesting.ts`'s `nest()` function directly — the same function
+built in Phase 2 — using only the current request's line items, expanded to
+individual parts exactly as `expand_to_parts` already does it. Group by
+`(material_code, brand, thickness, certification_tier)`, same as fulfillment
+grouping, since a customer's own multi-line order can span more than one sheet
+group (e.g., PEEK parts on one sheet, Ultem parts on another).
+
+This is read-only and stateless: it does not write to `nest_runs`, does not
+touch the remnant register, and has no effect on production. It exists purely
+to answer "what would my own parts look like, alone, on a sheet."
+
+Return this alongside the existing quote result:
+
+```ts
+solo_nest: {
+  groups: [
+    {
+      material_code, brand, thickness_nominal, certification_tier,
+      sheets: [ { index, length_in, width_in, placements: [...], remnants: [...] } ],
+      sheet_count, utilisation, recoverable_fraction,
+    },
+    ...
+  ]
+}
+```
+
+### 19.2 — The diagram component
+
+Build `SheetDiagram.tsx` — an SVG rendering of one sheet from `solo_nest`:
+
+- Sheet outline to scale
+- Each placed part as a labeled rectangle (part reference or line number),
+  colored by the material swatch already defined in the design system
+- Cut lines drawn along strip boundaries — visually distinguishing rip cuts
+  (full-length) from crosscuts (within a strip), matching the guillotine
+  sequence the nester actually produces
+- Keepable remnants shaded differently and labeled with their dimensions
+- Scrap (sub-`min_remnant_keep_in`) shown as plain hatching, unlabeled
+
+If a group needs more than one sheet, render each as a tab or a stacked list,
+labeled "Sheet 1 of 2," etc. Reuse the tabbed pattern already established
+elsewhere on the site rather than inventing a new one.
+
+Below the diagram, three real numbers pulled directly from the nest result:
+
+- **Sheets required:** e.g. "1 sheet" or "2 sheets"
+- **Utilisation:** e.g. "39% of this sheet"
+- **Recoverable fraction:** e.g. "96% placed or kept as usable remnant"
+
+Label this block plainly: **"How your order fits on our stock sheet."** Do not
+call it a "cut plan" or "production plan" — reserve that language for the
+actual fulfillment-time plan the operator generates, which may differ once
+real batching happens. This is a preview, and should read as one.
+
+### 19.3 — The honest caption
+
+Directly under the diagram, one sentence, non-negotiable in every render:
+
+> This shows your order alone. Choosing the flexible ship-when-full option
+> below often improves on this by combining your cut with other orders on the
+> same sheet — see [lead time comparison] for the price difference.
+
+This sentence is what keeps 19.1's honest diagram and the NEST tier's honest
+statistic from contradicting each other in the customer's mind. Do not remove
+it, shorten it below the point of clarity, or move it below the fold.
+
+### 19.4 — Low-utilisation nudge
+
+If `utilisation` on the solo diagram is below `nesting.target_utilization`
+from config (currently 0.78, though flagged uncalibrated), surface a plain
+suggestion rather than silence:
+
+> Your order uses under half this sheet on its own. The NEST option
+> typically improves this by batching with other orders — [see pricing]
+
+Do not phrase this as a guarantee ("will improve") — it's a tendency based on
+the statistical uplift already in config, not a commitment about this specific
+order.
+
+### What this phase does not do
+
+- It does not query real pending orders. The diagram is always solo, always
+  computed from the current request only.
+- It does not write anything to the database. No `nest_runs` row, no remnant
+  entries. This is preview-only.
+- It does not change pricing. `subtotal_goods` is unaffected by anything in
+  this phase — the price was already set using the statistical model in
+  Phase 1's engine, before this diagram is even computed.
+- It does not replace the operator's real nest board from Phase 7. That screen
+  still runs the real, current-queue nest at fulfillment time and is the only
+  place a real cross-order layout exists.
+
+### Definition of done — Phase 11
+
+- [ ] Every quote result includes a `solo_nest` object computed from that
+      request's own lines only
+- [ ] The diagram renders to scale, with placements, cut lines, and remnants
+      distinguished visually
+- [ ] Sheet count, utilisation, and recoverable fraction shown as real numbers
+      from the nest result — never estimated or rounded misleadingly
+- [ ] The honest caption in §19.3 appears on every render, unconditionally
+- [ ] Low-utilisation orders get the nudge toward the NEST tier, worded as a
+      tendency, not a guarantee
+- [ ] No database write occurs anywhere in this phase
+- [ ] The solo diagram and the NEST tier's statistical uplift are never merged
+      into one visual — verify by reading the finished UI yourself and
+      confirming a customer could not mistake one for the other
+
+---
+
+## 20. PHASE 12 — LIVE DIAGRAM, PER-MATERIAL SHEET SIZING, COLLAPSIBLE SECTIONS, EMAIL-A-QUOTE
+
+Wires the solo cut diagram from §19 directly into the live quote builder,
+makes sheet dimensions responsive to the actual material/thickness selected,
+and adds three UI patterns modeled on Nox's site: collapsible specs,
+collapsible part-number/PO fields, and a capture-and-email button. Do not
+start before Phase 11.
+
+### 20.1 — The diagram must live on the input screen, not a results screen
+
+Phase 11 built the solo diagram as part of the quote result. That's necessary
+but not sufficient — right now it likely renders only after the customer
+finishes entering a line and a price resolves. Fix this: the diagram must
+update on the same 400ms debounce as the price itself, in the same panel where
+the customer is actively typing dimensions, so watching the sheet fill in is
+part of the same feedback loop as watching the price change.
+
+Concretely: wherever the live price is rendered next to the input fields
+(built in Phase 3), the `SheetDiagram` component sits beside or below it,
+subscribed to the same debounced re-quote call. Every keystroke that changes
+material, thickness, length, width, or quantity triggers both the price
+recompute and the diagram recompute together, from the same API response —
+they should never be one step out of sync with each other.
+
+If a line item is incomplete (material chosen but no dimensions yet), show the
+diagram area as an empty sheet outline at that material's real stock size,
+not blank space — this previews the canvas before it previews the cut.
+
+### 20.2 — Sheet size must follow the actual material and thickness selected
+
+Distributors' stock sheets are not one universal size. `config.json` already
+models this at the material level: PEEK and Ultem ship 48x24, G10/FR4 ships
+48x36, Torlon ships a smaller 24x12. The diagram must read `sheet_length_in`
+and `sheet_width_in` from the SELECTED material's config entry every time the
+material dropdown changes — never hardcode a sheet size anywhere in the diagram
+component.
+
+**One real-world gap to close.** Right now sheet size is fixed per material
+regardless of thickness, but in reality a distributor's thick PEEK plate and
+their thin PEEK sheet can legitimately come in different stock panel sizes.
+Add optional per-thickness overrides to config without breaking the existing
+default:
+
+```json
+"PEEK_NAT": {
+  ...
+  "sheet_length_in": 48.0,
+  "sheet_width_in": 24.0,
+  "sheet_size_overrides": {
+    "0.125": { "sheet_length_in": 48.0, "sheet_width_in": 48.0 },
+    "2.0":   { "sheet_length_in": 24.0, "sheet_width_in": 24.0 }
+  }
+}
+```
+
+If a thickness has no override, fall back to the material-level default — this
+is additive, not a breaking change to the engine or the golden test cases.
+
+**This is data the owner needs to get from actual distributors, not guess.**
+Leave `sheet_size_overrides` empty (`{}`) for every material until real stock
+sizes per thickness are confirmed with suppliers. Flag this in config with an
+`UNCALIBRATED` note exactly like the other placeholder values already in the
+file.
+
+### 20.3 — Collapsible "specs" section, per line item
+
+Model this on the applicable-standards table pattern common on metals sites —
+a short list of industry specifications a given material/grade meets, each
+with a checkbox-style indicator, next to the base spec designation.
+
+**Read this before implementing anything:**
+
+`ASTM D6262` genuinely covers extruded, compression-molded, and injection-molded
+PAEK (PEEK) shapes — sheet, plate, rod, and tubular bar — and is a real, active
+standard. That confirms this pattern is legitimate for plastics. It does not
+confirm which standards apply to the other eleven materials, at what grade,
+from which brand. **Do not invent ASTM, SAE AMS, NEMA, or MIL-spec
+designations for materials without verified data.** A wrong standard number
+next to a certification claim is a false statement of fact on a commercial
+site, in the same category of risk as the DFARS and lineage statements already
+handled carefully elsewhere in this build.
+
+**Implementation, data-driven only:**
+
+Add an `applicable_specs` array to each material/brand pair in config.json,
+starting empty:
+
+```json
+"brands": {
+  "ENSINGER_TECAPEEK": {
+    "label": "Ensinger TECAPEEK natural",
+    "price_multiplier": 1.08,
+    "avl_common": true,
+    "applicable_specs": []
+  }
+}
+```
+
+Each populated entry, once there is verified data from a manufacturer
+datasheet or an actual MTR, looks like:
+
+```json
+"applicable_specs": [
+  { "designation": "ASTM D6262", "description": "PAEK extruded/molded shapes", "verified_source": "Ensinger TECAPEEK datasheet, rev. 2025" }
+]
+```
+
+The `verified_source` field is mandatory on every entry — it's the audit trail
+proving where the claim came from. **Build a validation check that refuses to
+render a spec on the live site if `verified_source` is empty or missing.**
+This is a hard gate, matching the pattern already used for MTRs and lots
+elsewhere in the system — no unverified claim reaches a customer.
+
+The accordion itself: clickable header ("Applicable specs ▾ / ▴"), collapsed
+by default, expanding to a simple two-column list — designation, description
+— exactly like the reference pattern, adapted to plastics. If a material/brand
+has zero populated specs, do not show an empty accordion; hide the whole
+section for that line rather than displaying a section with nothing in it.
+
+### 20.4 — Collapsible part number and purchase order sections
+
+Two independent collapsible sections per line item or per order (scope
+whichever way makes sense per field — part reference is naturally per-line, PO
+number is naturally per-order), collapsed by default, same accordion pattern
+as §20.3.
+
+**Part reference field.** Already exists per the original brief — capped at 40
+characters, labeled "internal reference only." This phase just adds the
+show/hide toggle around it; the character cap and labeling from the original
+spec do not change.
+
+**Purchase order upload.** This is new. A customer's own PO document is a
+business/procurement record, not a technical drawing of their part — treat it
+differently from the drawing-upload restriction, but still with real limits:
+
+- Accept PDF only. Reject every other extension, including image formats — a
+  PO is a document, not a photo.
+- Cap file size (5 MB is generous for a text PO).
+- Store to the `resale-certs`-style pattern: a private Supabase Storage bucket
+  (`purchase-orders/`), never public, attached to the quote or order record by
+  ID.
+- **Do not OCR it, parse it, or run it through any AI extraction.** It exists
+  purely as a reference attachment a human can open during fulfillment if a
+  question comes up about payment terms or PO validity. Automatically parsing
+  a document a customer didn't design for that purpose is a good way to
+  accidentally ingest something they didn't intend to share — treat it as
+  inert storage, not a data source.
+- If a customer's actual PO number is needed for the Stripe checkout
+  custom_field (already specified in §8), that stays a separate typed text
+  field — the upload is supplementary documentation, not a replacement for
+  that field.
+
+### 20.5 — Capture and email the on-screen quote as a PDF
+
+New endpoint: `POST /api/quote/email`.
+
+**Input:** `{ quote_id }` only. The email address it sends to is the same
+email the customer already entered earlier in the flow — **do not accept an
+arbitrary destination email address in this request.** If this endpoint can
+send to any address typed into a field, it becomes an open mechanism for
+someone to spam a third party's inbox with a branded PDF. Reuse whatever
+identity check already exists on the quote record; if none exists yet at this
+point in the flow, require the customer to (re)enter their own email and use
+that as both the storage key and the send target in one step.
+
+**What gets generated:** a distinct PDF template — call it `QuoteSummary`
+(`lib/docs/quote-summary.tsx`), separate from the `Invoice` template built in
+Phase 5. A quote is not an invoice: it has no PAID status, no tax line unless
+one is estimated, and should say "Quote — not a bill" somewhere visible, since
+a quote PDF wandering into an accounts-payable inbox looking identical to an
+invoice is a real confusion risk for a company this size.
+
+Content, pulled directly from the stored `quotes.result_json` — never
+recomputed, so the PDF always matches exactly what was on screen:
+
+- Quote number and date, validity window (from `quote.validity_hours`)
+- Every line: material, brand, certification tier, dimensions, thickness,
+  quantity, tolerance, finishes, annealing, add-ons
+- The solo cut diagram, if feasible to render into the PDF (an SVG-to-image
+  snapshot); if this is too heavy an integration for react-pdf in this
+  environment, it's acceptable to omit the diagram and include the numeric
+  summary only (sheets required, utilisation) — flag which approach was taken
+- Full cost breakdown and lead-time table, same as the on-screen quote
+- The existing spec statement (tolerance/squareness/thickness disclosure)
+  already generated by the pricing engine
+- Company contact details from `lib/brand.ts`
+
+**Send it via Resend**, same pattern as the Stage-1 order confirmation email in
+Phase 5, with the PDF as an attachment.
+
+**Rate-limit this endpoint.** A basic per-quote-id cooldown (e.g., no more than
+one send per 5 minutes per quote) is enough at this scale — it exists to stop
+accidental double-clicks and casual abuse, not to defend against a serious
+attacker. Don't over-build this; a simple in-memory or database timestamp
+check is sufficient.
+
+**Button placement and label:** "Email me this quote" — not "Send" or
+"Export," so it's unambiguous where it goes. Place it near the price, visible
+without scrolling once a valid price has resolved.
+
+### Definition of done — Phase 12
+
+- [ ] The diagram updates on the same debounce as the price, in the same input
+      panel — never gated behind a separate "get quote" click
+- [ ] Changing the material dropdown changes the sheet outline size and
+      proportions in the diagram immediately
+- [ ] `sheet_size_overrides` exists in config, empty by default, and the
+      diagram correctly falls back to the material-level size when no override
+      is present for the selected thickness
+- [ ] No ASTM, AMS, NEMA, or MIL designation appears anywhere on the site
+      unless it has a non-empty `verified_source` in config
+- [ ] The specs accordion is hidden entirely for any material/brand with zero
+      populated, verified specs — never shown empty
+- [ ] Part reference and PO upload each collapse/expand independently and
+      default to collapsed
+- [ ] PO upload rejects every extension except PDF, caps file size, and is
+      never parsed or OCR'd — verify by confirming no code path sends the
+      uploaded file to any AI or text-extraction service
+- [ ] "Email me this quote" sends only to the email already on the quote
+      record — attempting to pass an arbitrary destination address is rejected
+- [ ] The generated PDF is visually and textually distinguishable from an
+      invoice, including an explicit "Quote — not a bill" marker
+- [ ] Resending the same quote within the cooldown window is blocked with a
+      clear message, not a silent failure
