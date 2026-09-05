@@ -511,6 +511,7 @@
     "validity_hours": 168,
     "validity_note": "7 days. Drop to 24h for any material under distributor surcharge."
   },
+  "sheet_size_overrides_note": "UNCALIBRATED. Left empty ({}) for every material until real per-thickness stock sheet sizes are confirmed with actual distributors; falls back to the material's flat sheet_length_in/sheet_width_in until then.",
   "materials": {
     "PEEK_NAT": {
       "label": "PEEK, natural (unfilled)",
@@ -533,6 +534,7 @@
       ],
       "sheet_length_in": 48.0,
       "sheet_width_in": 24.0,
+      "sheet_size_overrides": {},
       "thickness_oversize_in": 0.035,
       "residual_stress_flag": true,
       "filled_grade": false,
@@ -543,27 +545,32 @@
         "GENERIC": {
           "label": "Any approved source",
           "price_multiplier": 1.0,
-          "avl_common": false
+          "avl_common": false,
+          "applicable_specs": []
         },
         "ENSINGER_TECAPEEK": {
           "label": "Ensinger TECAPEEK natural",
           "price_multiplier": 1.08,
-          "avl_common": true
+          "avl_common": true,
+          "applicable_specs": []
         },
         "MITSUBISHI_KETRON": {
           "label": "Mitsubishi Ketron PEEK",
           "price_multiplier": 1.06,
-          "avl_common": true
+          "avl_common": true,
+          "applicable_specs": []
         },
         "VICTREX": {
           "label": "Victrex PEEK plate",
           "price_multiplier": 1.12,
-          "avl_common": true
+          "avl_common": true,
+          "applicable_specs": []
         },
         "ROECHLING_SUSTAPEEK": {
           "label": "Roechling Sustapeek",
           "price_multiplier": 1.04,
-          "avl_common": false
+          "avl_common": false,
+          "applicable_specs": []
         }
       },
       "notes": "Plate carries residual stress. Blanks may bow 0.010-0.025 in within 48h of cutting."
@@ -585,6 +592,7 @@
       ],
       "sheet_length_in": 48.0,
       "sheet_width_in": 24.0,
+      "sheet_size_overrides": {},
       "thickness_oversize_in": 0.04,
       "residual_stress_flag": true,
       "filled_grade": true,
@@ -595,17 +603,20 @@
         "GENERIC": {
           "label": "Any approved source",
           "price_multiplier": 1.0,
-          "avl_common": false
+          "avl_common": false,
+          "applicable_specs": []
         },
         "ENSINGER_TECAPEEK": {
           "label": "Ensinger TECAPEEK GF30",
           "price_multiplier": 1.08,
-          "avl_common": true
+          "avl_common": true,
+          "applicable_specs": []
         },
         "MITSUBISHI_KETRON": {
           "label": "Mitsubishi Ketron GF30",
           "price_multiplier": 1.06,
-          "avl_common": true
+          "avl_common": true,
+          "applicable_specs": []
         }
       },
       "notes": "Glass at 30% dulls carbide roughly 3-5x faster than virgin."
@@ -627,6 +638,7 @@
       ],
       "sheet_length_in": 48.0,
       "sheet_width_in": 24.0,
+      "sheet_size_overrides": {},
       "thickness_oversize_in": 0.04,
       "residual_stress_flag": true,
       "filled_grade": true,
@@ -637,17 +649,20 @@
         "GENERIC": {
           "label": "Any approved source",
           "price_multiplier": 1.0,
-          "avl_common": false
+          "avl_common": false,
+          "applicable_specs": []
         },
         "ENSINGER_TECAPEEK": {
           "label": "Ensinger TECAPEEK CF30",
           "price_multiplier": 1.08,
-          "avl_common": true
+          "avl_common": true,
+          "applicable_specs": []
         },
         "MITSUBISHI_KETRON": {
           "label": "Mitsubishi Ketron CA30",
           "price_multiplier": 1.06,
-          "avl_common": true
+          "avl_common": true,
+          "applicable_specs": []
         }
       },
       "notes": "Conductive carbon dust. Dedicated extraction; do not share a vacuum with an electronics bench."
@@ -672,6 +687,7 @@
       ],
       "sheet_length_in": 48.0,
       "sheet_width_in": 24.0,
+      "sheet_size_overrides": {},
       "thickness_oversize_in": 0.03,
       "residual_stress_flag": true,
       "filled_grade": false,
@@ -682,22 +698,26 @@
         "GENERIC": {
           "label": "Any approved source",
           "price_multiplier": 1.0,
-          "avl_common": false
+          "avl_common": false,
+          "applicable_specs": []
         },
         "SABIC_ULTEM": {
           "label": "SABIC Ultem 1000",
           "price_multiplier": 1.1,
-          "avl_common": true
+          "avl_common": true,
+          "applicable_specs": []
         },
         "ENSINGER_TECAPEI": {
           "label": "Ensinger TECAPEI",
           "price_multiplier": 1.06,
-          "avl_common": true
+          "avl_common": true,
+          "applicable_specs": []
         },
         "MITSUBISHI_DURATRON": {
           "label": "Mitsubishi Duratron U1000",
           "price_multiplier": 1.05,
-          "avl_common": true
+          "avl_common": true,
+          "applicable_specs": []
         }
       },
       "notes": "STRESS-CRACK SENSITIVE. No IPA, no solvent contact. Clean with DI water and lint-free only."
@@ -719,6 +739,7 @@
       ],
       "sheet_length_in": 48.0,
       "sheet_width_in": 24.0,
+      "sheet_size_overrides": {},
       "thickness_oversize_in": 0.04,
       "residual_stress_flag": true,
       "filled_grade": true,
@@ -729,12 +750,14 @@
         "GENERIC": {
           "label": "Any approved source",
           "price_multiplier": 1.0,
-          "avl_common": false
+          "avl_common": false,
+          "applicable_specs": []
         },
         "SABIC_ULTEM": {
           "label": "SABIC Ultem 2300",
           "price_multiplier": 1.1,
-          "avl_common": true
+          "avl_common": true,
+          "applicable_specs": []
         }
       },
       "notes": "Stress-crack sensitive and abrasive. Worst of both."
@@ -760,6 +783,7 @@
       ],
       "sheet_length_in": 48.0,
       "sheet_width_in": 24.0,
+      "sheet_size_overrides": {},
       "thickness_oversize_in": 0.03,
       "residual_stress_flag": false,
       "filled_grade": false,
@@ -770,17 +794,20 @@
         "GENERIC": {
           "label": "Any approved source",
           "price_multiplier": 1.0,
-          "avl_common": false
+          "avl_common": false,
+          "applicable_specs": []
         },
         "DUPONT_DELRIN": {
           "label": "DuPont Delrin 150",
           "price_multiplier": 1.15,
-          "avl_common": true
+          "avl_common": true,
+          "applicable_specs": []
         },
         "ENSINGER_TECAFORM": {
           "label": "Ensinger TECAFORM AH",
           "price_multiplier": 1.05,
-          "avl_common": true
+          "avl_common": true,
+          "applicable_specs": []
         }
       },
       "notes": "Centerline porosity risk above 2 in thickness. Flag on the quote."
@@ -802,6 +829,7 @@
       ],
       "sheet_length_in": 48.0,
       "sheet_width_in": 24.0,
+      "sheet_size_overrides": {},
       "thickness_oversize_in": 0.03,
       "residual_stress_flag": false,
       "filled_grade": true,
@@ -812,12 +840,14 @@
         "GENERIC": {
           "label": "Any approved source",
           "price_multiplier": 1.0,
-          "avl_common": false
+          "avl_common": false,
+          "applicable_specs": []
         },
         "DUPONT_DELRIN": {
           "label": "DuPont Delrin AF",
           "price_multiplier": 1.15,
-          "avl_common": true
+          "avl_common": true,
+          "applicable_specs": []
         }
       },
       "notes": ""
@@ -842,6 +872,7 @@
       ],
       "sheet_length_in": 48.0,
       "sheet_width_in": 24.0,
+      "sheet_size_overrides": {},
       "thickness_oversize_in": 0.02,
       "residual_stress_flag": false,
       "filled_grade": false,
@@ -852,7 +883,8 @@
         "GENERIC": {
           "label": "Any approved source",
           "price_multiplier": 1.0,
-          "avl_common": false
+          "avl_common": false,
+          "applicable_specs": []
         }
       },
       "notes": "Gummy. Edges show slight fuzz as sawn; recommend the SCRAPED edge finish."
@@ -875,6 +907,7 @@
       ],
       "sheet_length_in": 48.0,
       "sheet_width_in": 24.0,
+      "sheet_size_overrides": {},
       "thickness_oversize_in": 0.03,
       "residual_stress_flag": false,
       "filled_grade": true,
@@ -885,7 +918,8 @@
         "GENERIC": {
           "label": "Any approved source",
           "price_multiplier": 1.0,
-          "avl_common": false
+          "avl_common": false,
+          "applicable_specs": []
         }
       },
       "notes": ""
@@ -908,6 +942,7 @@
       ],
       "sheet_length_in": 48.0,
       "sheet_width_in": 24.0,
+      "sheet_size_overrides": {},
       "thickness_oversize_in": 0.035,
       "residual_stress_flag": true,
       "filled_grade": false,
@@ -918,12 +953,14 @@
         "GENERIC": {
           "label": "Any approved source",
           "price_multiplier": 1.0,
-          "avl_common": false
+          "avl_common": false,
+          "applicable_specs": []
         },
         "MITSUBISHI_TECHTRON": {
           "label": "Mitsubishi Techtron PPS",
           "price_multiplier": 1.08,
-          "avl_common": true
+          "avl_common": true,
+          "applicable_specs": []
         }
       },
       "notes": ""
@@ -945,6 +982,7 @@
       ],
       "sheet_length_in": 24.0,
       "sheet_width_in": 12.0,
+      "sheet_size_overrides": {},
       "thickness_oversize_in": 0.04,
       "residual_stress_flag": true,
       "filled_grade": false,
@@ -955,12 +993,14 @@
         "GENERIC": {
           "label": "Any approved source",
           "price_multiplier": 1.0,
-          "avl_common": false
+          "avl_common": false,
+          "applicable_specs": []
         },
         "SOLVAY_TORLON": {
           "label": "Solvay Torlon 4203",
           "price_multiplier": 1.12,
-          "avl_common": true
+          "avl_common": true,
+          "applicable_specs": []
         }
       },
       "notes": "Extremely high value. Confirm distributor stock before promising a date."
@@ -986,6 +1026,7 @@
       ],
       "sheet_length_in": 48.0,
       "sheet_width_in": 36.0,
+      "sheet_size_overrides": {},
       "thickness_oversize_in": 0.015,
       "residual_stress_flag": false,
       "filled_grade": true,
@@ -997,7 +1038,8 @@
         "GENERIC": {
           "label": "Any approved source",
           "price_multiplier": 1.0,
-          "avl_common": false
+          "avl_common": false,
+          "applicable_specs": []
         }
       },
       "notes": "Respirable glass/epoxy dust. Local exhaust plus P100. Batch to the scheduled composite day."

@@ -41,10 +41,23 @@ export class QuoteError extends Error {
 // Config shape - mirrors config.json exactly
 // ---------------------------------------------------------------------------
 
+/** CLAUDE_CODE_BRIEF.md §20.3 - a claimed standard is worthless without an audit trail. */
+export interface ApplicableSpec {
+  designation: string;
+  description: string;
+  verified_source: string;
+}
+
 export interface MaterialBrand {
   label: string;
   price_multiplier: number;
   avl_common: boolean;
+  applicable_specs?: ApplicableSpec[];
+}
+
+export interface SheetSize {
+  sheet_length_in: number;
+  sheet_width_in: number;
 }
 
 export interface MaterialSpec {
@@ -59,6 +72,8 @@ export interface MaterialSpec {
   stock_thicknesses_in: number[];
   sheet_length_in: number;
   sheet_width_in: number;
+  /** CLAUDE_CODE_BRIEF.md §20.2 - keyed by thickness as it appears in stock_thicknesses_in, stringified. */
+  sheet_size_overrides?: Record<string, SheetSize>;
   thickness_oversize_in: number;
   residual_stress_flag: boolean;
   filled_grade: boolean;

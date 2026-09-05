@@ -31,6 +31,8 @@ export interface QuoteRow extends NewQuoteRow {
   created_at: string;
   expires_at: string;
   consumed_at: string | null;
+  emailed_at: string | null;
+  po_upload_path: string | null;
 }
 
 const memoryStore = new Map<string, QuoteRow>();
@@ -65,7 +67,15 @@ export async function saveQuote(row: NewQuoteRow, validityHours: number): Promis
 
   warnOnce();
   const id = randomUUID();
-  const full: QuoteRow = { ...row, id, created_at: now.toISOString(), expires_at, consumed_at: null };
+  const full: QuoteRow = {
+    ...row,
+    id,
+    created_at: now.toISOString(),
+    expires_at,
+    consumed_at: null,
+    emailed_at: null,
+    po_upload_path: null,
+  };
   memoryStore.set(id, full);
   return full;
 }
@@ -105,4 +115,44 @@ export async function markQuoteConsumed(id: string): Promise<boolean> {
   if (!row || row.consumed_at !== null) return false;
   row.consumed_at = consumed_at;
   return true;
+}
+
+/**
+ * Records that a quote was just emailed - CLAUDE_CODE_BRIEF.md §20.5. The
+ * caller (POST /api/quote/email) decides which email address to persist
+ * BEFORE calling this: the quote's existing email if it already has one, or
+ * the freshly supplied one on first use. This function just writes whatever
+ * it's given, so the "don't let a client redirect an already-emailed quote
+ * elsewhere" rule lives in the route, not here.
+ */
+export async function markQuoteEmailed(id: string, email: string): Promise<QuoteRow | null> {
+  const emailed_at = new Date().toISOString();
+
+  if (supabaseConfigured()) {
+    const sb = getSupabaseAdmin();
+    const { data, error } = await sb.from("quotes").update({ email, emailed_at }).eq("id", id).select().maybeSingle();
+    if (error) throw new Error(`Failed to record quote email send: ${error.message}`);
+    return (data as QuoteRow) ?? null;
+  }
+
+  const row = memoryStore.get(id);
+  if (!row) return null;
+  row.email = email;
+  row.emailed_at = emailed_at;
+  return row;
+}
+
+/** Attaches an uploaded purchase-order document's storage path to a quote. */
+export async function attachPoUpload(id: string, path: string): Promise<QuoteRow | null> {
+  if (supabaseConfigured()) {
+    const sb = getSupabaseAdmin();
+    const { data, error } = await sb.from("quotes").update({ po_upload_path: path }).eq("id", id).select().maybeSingle();
+    if (error) throw new Error(`Failed to attach purchase order upload: ${error.message}`);
+    return (data as QuoteRow) ?? null;
+  }
+
+  const row = memoryStore.get(id);
+  if (!row) return null;
+  row.po_upload_path = path;
+  return row;
 }

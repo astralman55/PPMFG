@@ -1,5 +1,6 @@
 import type { LineResult, PricingConfig } from "./engine";
 import { expand_to_parts, group_queue, nest, type QueueRow } from "./nesting";
+import { resolveSheetSize } from "./sheet-size";
 
 /**
  * CLAUDE_CODE_BRIEF.md §19 (Phase 11) - the SOLO nest preview shown at quote
@@ -91,7 +92,8 @@ export function buildSoloNest(lines: LineResult[], cfg: PricingConfig): SoloNest
     const material_code = rows[0].material_code;
     const mat = cfg.materials[material_code];
     const parts = expand_to_parts(rows, cfg);
-    const result = nest(parts, mat.sheet_length_in, mat.sheet_width_in, cfg);
+    const sheetSize = resolveSheetSize(mat, rows[0].thickness_nominal);
+    const result = nest(parts, sheetSize.sheet_length_in, sheetSize.sheet_width_in, cfg);
 
     return {
       material_code,
