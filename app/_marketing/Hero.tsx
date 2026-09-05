@@ -9,7 +9,7 @@ import { DimensionedBlank } from "./DimensionedBlank";
 import { materialSwatch } from "./swatches";
 
 const CFG = cfgJson as unknown as PricingConfig;
-const LEAD_TIER_ORDER = ["SAMEDAY", "RUSH24", "RUSH48", "STD", "NEST"] as const;
+const LEAD_TIER_ORDER = ["SAMEDAY", "RUSH24", "RUSH48", "STD", "FLEX"] as const;
 const MATERIAL_CODES = Object.keys(CFG.materials);
 
 function money(n: number): string {

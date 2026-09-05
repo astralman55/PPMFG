@@ -199,7 +199,7 @@ Then STOP and show me the utilisation numbers.
 ```
 
 **Gate:** one order should land near 14% utilisation, three batched near 51%.
-That gap is the entire economic argument for the NEST lead tier.
+That gap is the entire economic argument for the FLEX lead tier.
 
 ---
 

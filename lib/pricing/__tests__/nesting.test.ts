@@ -103,7 +103,7 @@ describe("oversized part", () => {
 
 // ---------------------------------------------------------------------------
 // Cross-order batching - the Nox mechanism. This is the entire economic
-// argument for the NEST lead tier: three small orders share a sheet far
+// argument for the FLEX lead tier: three small orders share a sheet far
 // better than any one of them alone.
 // ---------------------------------------------------------------------------
 

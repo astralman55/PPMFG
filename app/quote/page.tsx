@@ -2,18 +2,20 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import cfgJson from "@/lib/pricing/config.json";
 import { parse_fraction_input, DimensionInputError } from "@/lib/pricing/fractions";
 import type { PricingConfig, QuoteResult, LineItemInput } from "@/lib/pricing/engine";
 import type { SoloNestGroup, SoloNestResult } from "@/lib/pricing/solo-nest";
 import { resolveSheetSize } from "@/lib/pricing/sheet-size";
+import { brand } from "@/lib/brand";
 import { SheetDiagram } from "./SheetDiagram";
 import { EmptySheetOutline } from "./EmptySheetOutline";
 import { SpecsAccordion } from "./SpecsAccordion";
 
 const CFG = cfgJson as unknown as PricingConfig;
 
-const LEAD_TIER_ORDER = ["SAMEDAY", "RUSH24", "RUSH48", "STD", "NEST"] as const;
+const LEAD_TIER_ORDER = ["SAMEDAY", "RUSH24", "RUSH48", "STD", "FLEX"] as const;
 
 // Not offered yet - see CLAUDE_CODE_BRIEF.md §4: "Do not build FAIR until
 // there is a documented inspection process and calibrated gauges."
@@ -369,7 +371,12 @@ function QuoteForm() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10 text-neutral-900 dark:text-neutral-100">
-      <h1 className="text-2xl font-semibold">Get a price</h1>
+      <p className="text-sm">
+        <Link href="/" className="text-neutral-500 hover:underline">
+          {brand.companyName}
+        </Link>
+      </p>
+      <h1 className="mt-4 text-2xl font-semibold">Get a price</h1>
       <p className="mt-1 text-sm text-neutral-500">
         Enter one blank below. Price updates automatically as you type.
       </p>

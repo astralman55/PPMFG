@@ -340,7 +340,7 @@
       "ship_offset_business_days": 4,
       "allows_batching": true
     },
-    "NEST": {
+    "FLEX": {
       "label": "Flexible - ships when the sheet fills, up to 10 business days",
       "multiplier": 0.85,
       "nest_uplift": 0.25,
@@ -350,7 +350,7 @@
       "customer_copy": "We hold your parts until we can cut them alongside other orders on the same sheet. Less scrap, lower price, longer wait."
     }
   },
-  "lead_tier_note": "nest_uplift raises effective yield because batched orders share a sheet. This is the entire economic argument for the NEST tier, and it is why rush is expensive twice over: you pay the multiplier AND you forfeit the nesting bonus.",
+  "lead_tier_note": "nest_uplift raises effective yield because batched orders share a sheet. This is the entire economic argument for the FLEX tier, and it is why rush is expensive twice over: you pay the multiplier AND you forfeit the nesting bonus.",
   "nesting": {
     "algorithm": "guillotine_shelf_bfdh",
     "algorithm_note": "A sliding table saw can only make edge-to-edge guillotine cuts: rip the sheet into strips, then crosscut each strip. Shelf packing is therefore not a heuristic approximation - it is the exact physical model of the machine. Do NOT substitute a free-form rectangle packer; its layouts are uncuttable on this equipment.",

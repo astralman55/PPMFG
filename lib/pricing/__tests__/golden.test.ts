@@ -263,32 +263,32 @@ describe("annealing", () => {
 });
 
 // ---------------------------------------------------------------------------
-// [7] Lead tiers - rush costs twice, NEST pays back
+// [7] Lead tiers - rush costs twice, FLEX pays back
 // ---------------------------------------------------------------------------
 
 describe("lead tiers", () => {
-  const TIERS = ["SAMEDAY", "RUSH24", "RUSH48", "STD", "NEST"] as const;
+  const TIERS = ["SAMEDAY", "RUSH24", "RUSH48", "STD", "FLEX"] as const;
   const rows = Object.fromEntries(TIERS.map((t) => [t, q({ lead_tier: t })]));
 
   test("price falls monotonically as lead time lengthens", () => {
     expect(rows.SAMEDAY.totals.total_due).toBeGreaterThan(rows.RUSH24.totals.total_due);
     expect(rows.RUSH24.totals.total_due).toBeGreaterThan(rows.RUSH48.totals.total_due);
     expect(rows.RUSH48.totals.total_due).toBeGreaterThan(rows.STD.totals.total_due);
-    expect(rows.STD.totals.total_due).toBeGreaterThan(rows.NEST.totals.total_due);
+    expect(rows.STD.totals.total_due).toBeGreaterThan(rows.FLEX.totals.total_due);
   });
   test("rush forfeits the nesting uplift", () => {
     expect(rows.RUSH24.nest_uplift).toBe(0.0);
   });
-  test("NEST yields the highest effective yield", () => {
-    expect(rows.NEST.lines[0].geometry.eta_eff).toBeGreaterThan(rows.STD.lines[0].geometry.eta_eff);
+  test("FLEX yields the highest effective yield", () => {
+    expect(rows.FLEX.lines[0].geometry.eta_eff).toBeGreaterThan(rows.STD.lines[0].geometry.eta_eff);
     expect(rows.STD.lines[0].geometry.eta_eff).toBeGreaterThan(rows.RUSH24.lines[0].geometry.eta_eff);
   });
-  test("NEST is cheaper than STD on the canonical part", () => {
-    expect(rows.STD.totals.total_due).toBeGreaterThan(rows.NEST.totals.total_due);
+  test("FLEX is cheaper than STD on the canonical part", () => {
+    expect(rows.STD.totals.total_due).toBeGreaterThan(rows.FLEX.totals.total_due);
   });
 
   test("lead-tier monotonicity sweep: no price inversion anywhere in the catalogue", () => {
-    const ORDER = ["SAMEDAY", "RUSH24", "RUSH48", "STD", "NEST"] as const;
+    const ORDER = ["SAMEDAY", "RUSH24", "RUSH48", "STD", "FLEX"] as const;
     const SIZES: [number, number][] = [
       [6, 6],
       [12, 12],

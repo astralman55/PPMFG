@@ -12,10 +12,11 @@ const CFG = cfgJson as unknown as PricingConfig;
 /**
  * CLAUDE_CODE_BRIEF.md §19 (Phase 11) - renders the read-only solo nest
  * preview for one material group. This is deliberately kept visually and
- * textually separate from the NEST tier's statistical uplift (§19.3): the
+ * textually separate from the FLEX tier's statistical uplift (§19.3): the
  * honest caption below always renders, unconditionally, so a customer can
  * never mistake "how my own parts fit alone" for "what will actually get
- * batched and cut."
+ * batched and cut." Copy below refers to it as "the flexible option," never
+ * by its internal FLEX config code - that code is never customer-facing.
  */
 export function SheetDiagram({ group }: { group: SoloNestGroup }) {
   const [sheetIdx, setSheetIdx] = useState(0);
@@ -188,10 +189,10 @@ export function SheetDiagram({ group }: { group: SoloNestGroup }) {
 
       {belowTarget ? (
         <p className="mt-2 text-xs text-amber-700 dark:text-amber-500">
-          Your order uses {pct(group.utilisation)} of this sheet on its own. The NEST option typically improves this
-          by batching with other orders — see the{" "}
+          Your order uses {pct(group.utilisation)} of this sheet on its own. The flexible option typically improves
+          this by batching with other orders — see the{" "}
           <a href="#lead-time-table" className="underline">
-            NEST row
+            Flexible row
           </a>{" "}
           above.
         </p>

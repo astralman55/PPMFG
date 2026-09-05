@@ -137,7 +137,7 @@ numbers. Throws typed `QuoteError` with messages written for a machinist:
 ### The five things that are easy to port wrongly
 
 **Rush costs twice.** The multiplier raises conversion cost, and the tier's
-`nest_uplift` drops to zero so effective yield falls too. `NEST` is the mirror:
+`nest_uplift` drops to zero so effective yield falls too. `FLEX` is the mirror:
 0.85 multiplier *and* +0.25 uplift. This is the entire economic argument for
 offering a slow tier and it must survive the port intact.
 
@@ -152,7 +152,7 @@ higher-margin band and *raise* the price. The v1 engine had this bug and a
 catalogue-wide sweep found it. Interpolate between anchors.
 
 **The free-delivery threshold uses a lead-tier-invariant basis.** Comparing it
-against the quoted price creates a cliff where picking the cheaper `NEST` tier
+against the quoted price creates a cliff where picking the cheaper `FLEX` tier
 drops the order below the threshold, adds an $18 fee, and raises the total.
 `threshold_basis` is recomputed at STD's uplift for every tier. Do not simplify
 this away.
@@ -267,7 +267,7 @@ impossible to skip.
 
 Measured in the reference implementation: one order alone reaches 14% sheet
 utilisation; three orders batched onto the same sheet reach 51%. That is the
-Nox mechanism, and it is what the `NEST` lead tier sells.
+Nox mechanism, and it is what the `FLEX` lead tier sells.
 
 ---
 
@@ -1157,7 +1157,7 @@ separate:
 1. **The solo diagram** — real, exact, computed live from this order alone.
    "Here is how your parts fit on our stock sheet, and how many sheets you
    need." Always accurate. Always buildable. Build it now.
-2. **The NEST tier's statistical uplift** — already priced into the engine via
+2. **The FLEX tier's statistical uplift** — already priced into the engine via
    `nest_uplift` in config.json. This is a *claim about expected future
    batching*, not a picture of a specific sheet. It stays a number and a
    sentence, never a diagram, because a diagram implies a specific layout that
@@ -1165,7 +1165,8 @@ separate:
 
 Do not build a single combined view that blurs these. A customer who reads the
 solo diagram as "this is what happens to my parts" and separately reads "choose
-NEST and we'll batch you with others to cut cost" understands both truthfully.
+the flexible option and we'll batch you with others to cut cost" understands
+both truthfully.
 A single diagram trying to show both would have to either fabricate other
 orders or silently omit the batching benefit — both are worse than two honest,
 separate answers.
@@ -1235,7 +1236,7 @@ Directly under the diagram, one sentence, non-negotiable in every render:
 > below often improves on this by combining your cut with other orders on the
 > same sheet — see [lead time comparison] for the price difference.
 
-This sentence is what keeps 19.1's honest diagram and the NEST tier's honest
+This sentence is what keeps 19.1's honest diagram and the FLEX tier's honest
 statistic from contradicting each other in the customer's mind. Do not remove
 it, shorten it below the point of clarity, or move it below the fold.
 
@@ -1245,7 +1246,7 @@ If `utilisation` on the solo diagram is below `nesting.target_utilization`
 from config (currently 0.78, though flagged uncalibrated), surface a plain
 suggestion rather than silence:
 
-> Your order uses under half this sheet on its own. The NEST option
+> Your order uses under half this sheet on its own. The flexible option
 > typically improves this by batching with other orders — [see pricing]
 
 Do not phrase this as a guarantee ("will improve") — it's a tendency based on
@@ -1274,10 +1275,10 @@ order.
 - [ ] Sheet count, utilisation, and recoverable fraction shown as real numbers
       from the nest result — never estimated or rounded misleadingly
 - [ ] The honest caption in §19.3 appears on every render, unconditionally
-- [ ] Low-utilisation orders get the nudge toward the NEST tier, worded as a
+- [ ] Low-utilisation orders get the nudge toward the FLEX tier, worded as a
       tendency, not a guarantee
 - [ ] No database write occurs anywhere in this phase
-- [ ] The solo diagram and the NEST tier's statistical uplift are never merged
+- [ ] The solo diagram and the FLEX tier's statistical uplift are never merged
       into one visual — verify by reading the finished UI yourself and
       confirming a customer could not mistake one for the other
 

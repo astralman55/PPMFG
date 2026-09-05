@@ -1116,7 +1116,7 @@ interface FreightResult {
  * quoted subtotal.
  *
  * Why: a free-shipping threshold compared against the quoted price creates a
- * cliff. A customer who picks the cheaper NEST tier can drop below the
+ * cliff. A customer who picks the cheaper FLEX tier can drop below the
  * threshold, gain an $18 delivery fee, and end up paying MORE for choosing
  * the slower option. Delivery cost has nothing to do with how fast we cut,
  * so the threshold must not move with the lead tier.

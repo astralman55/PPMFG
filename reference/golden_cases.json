@@ -97,7 +97,7 @@
       }
     },
     {
-      "name": "peek_nest_tier",
+      "name": "peek_flex_tier",
       "input": {
         "lines": [
           {
@@ -108,7 +108,7 @@
             "qty": 1
           }
         ],
-        "lead_tier": "NEST",
+        "lead_tier": "FLEX",
         "sourcing_mode": "MASTER_SHEET",
         "order_date": "2026-09-03"
       },

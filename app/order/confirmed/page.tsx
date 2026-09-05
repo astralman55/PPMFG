@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { getOrderBySessionId } from "@/lib/orders/store";
+import { brand } from "@/lib/brand";
 
 /**
  * Where Stripe Checkout's success_url sends the buyer, and what the Stage-1
@@ -75,7 +77,16 @@ export default async function OrderConfirmedPage({
 }
 
 function Shell({ children }: { children: ReactNode }) {
-  return <main className="mx-auto max-w-2xl px-4 py-10 text-neutral-900 dark:text-neutral-100">{children}</main>;
+  return (
+    <main className="mx-auto max-w-2xl px-4 py-10 text-neutral-900 dark:text-neutral-100">
+      <p className="text-sm">
+        <Link href="/" className="text-neutral-500 hover:underline">
+          {brand.companyName}
+        </Link>
+      </p>
+      <div className="mt-4">{children}</div>
+    </main>
+  );
 }
 
 function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
