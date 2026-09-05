@@ -723,6 +723,8 @@ Stripe retries; double-sending an invoice is a support nightmare.
 | **6** | Lot library, fulfilment, C of C, packet merge | Full order → packet, end to end |
 | **7** | Nest board + remnant register + calibration panel | Nest run commits and populates remnants |
 | **8** | Landing page per §11 | Screenshot review, mobile and desktop |
+| **9** | Material library: `/materials` grid + detail pages + `/learn` articles, per §17 | Grid and a detail page generated entirely from `config.json`; images sourced honestly or clearly flagged as placeholder |
+| **10** | Homepage restructure modeled on Nox Metals, per §18 | Eight-section homepage; no fabricated logos/certifications/AI claims |
 
 ---
 
@@ -751,3 +753,376 @@ Stripe retries; double-sending an invoice is a support nightmare.
    and a DDTC conversation before that ever changes.
 10. **Verify the machine before trusting `max_dim_in` and the tolerance gates.**
     Every tolerance claim in config is a promise a specific saw has to keep.
+
+---
+
+## 17. PHASE 9 — MATERIAL LIBRARY: SEO PAGES AND CARDS
+
+Do not start this phase before Phase 8 is done — it links into the homepage
+and the quote tool, both of which need to already exist.
+
+### Why this phase exists
+
+Right now the only way to find this site is to already know it exists. A buyer
+who searches "PEEK machining tolerances" or "why does my PEEK blank warp" is
+standing at the exact moment of the exact problem this business solves, and
+without this phase, that search sends them to a forum thread or a competitor
+instead of here.
+
+The material library is not decoration. It is the acquisition channel that
+runs while you sleep, and it is built entirely from data that already exists in
+`lib/pricing/config.json`. No new business decisions are needed — this phase is
+presentation and search-visibility work over the 12 materials already defined.
+
+### What gets built
+
+1. A materials index page — a grid of cards, one per material
+2. An individual detail page per material, at a permanent URL
+3. A homepage entry point into the grid
+4. A short library of standalone educational articles, cross-linked from the
+   relevant material pages
+5. Search metadata so the pages are actually findable
+
+### 17.1 — Data source: do not hand-write material facts twice
+
+Every number and flag on these pages — density, stock thicknesses, abrasion,
+residual stress, solvent sensitivity, brands carried — already lives in
+`config.json`. The page content is generated FROM that file, not written
+separately and then left to drift out of sync with it.
+
+Build `lib/materials/content.ts`: one object per material code, keyed to match
+`config.json` exactly, holding only what config does not already contain —
+the prose. Nothing numeric belongs in this file if config already has it.
+
+```ts
+export const materialContent: Record<string, {
+  hero_line: string;              // one sentence, under 20 words
+  overview: string;               // 2-3 sentences, plain language
+  typical_applications: string[]; // 4-6 short bullets
+  why_this_material: string;      // when to choose it over alternatives
+  handling_notes: string[];       // beyond what config's residual_stress_flag /
+                                   // solvent_stress_crack_sensitive already state —
+                                   // do not repeat those, link to them
+  faq: { question: string; answer: string }[]; // 3-5 per material
+  slug: string;                   // url-safe, e.g. "peek-natural"
+  meta_title: string;             // under 60 characters
+  meta_description: string;       // under 155 characters
+}>
+```
+
+A page component reads config for every fact (density, price basis, stock
+thicknesses, brands, flags) and reads this file only for the prose wrapped
+around those facts. If a number ever needs to change, changing config.json is
+enough — no page needs editing.
+
+### 17.2 — Material card (grid + homepage)
+
+One card per material. Required content, all sourced as above:
+
+- Material swatch color (already defined per material in the frontend-design
+  palette work from Phase 8 — reuse it, do not invent new colors)
+- Material image (see 17.4 — sourcing rules)
+- Name and family (e.g. "PEEK, natural" / "Polyetheretherketone")
+- One-line hero (`hero_line`)
+- Two or three spec chips: density, stock thickness range, brands available
+- A flag badge if `residual_stress_flag` or `solvent_stress_crack_sensitive`
+  is true on that material — small, not alarming, consistent with how flags
+  are already surfaced in quote results
+- Click target: the whole card links to the detail page
+
+Grid lives at `/materials`. Sort by `family` so related grades sit together
+(PEEK variants together, Ultem variants together, etc).
+
+### 17.3 — Material detail page
+
+Route: `/materials/[slug]`, statically generated at build time — these pages
+do not need to be dynamic, they change only when config.json changes.
+
+Structure, top to bottom:
+
+1. Hero: image, name, family, `hero_line`
+2. Overview (`overview`)
+3. Spec table pulled directly from config: density, price basis note (do not
+   show the actual `price_per_lb` — that's an internal cost figure, not a
+   retail price), stock thicknesses, available brands with their labels,
+   sheet size, blade group
+4. Handling notice block — pull directly from config flags:
+   - if `residual_stress_flag`: the 48-hour flatness note, with a link to the
+     tolerance tiers section of the quote tool and a mention that annealing is
+     available
+   - if `solvent_stress_crack_sensitive`: the IPA warning, in the same language
+     already used in the engine's flag output
+   - if `grain_sensitive`: the orientation note
+   - never invent a caution that isn't already a flag in config; if config
+     doesn't flag it, don't claim it on the page
+5. `why_this_material`
+6. `typical_applications` as a bullet list
+7. `handling_notes`
+8. FAQ (`faq`), rendered as an accordion
+9. A live-price CTA: "See a price for this material" — pre-fills the quote
+   tool at `/quote` with this material_code already selected via a query
+   parameter, so the visitor lands one field away from a number, not zero
+10. Cross-links to 2-3 related materials (same family, or common substitution
+    pairs — e.g. Delrin AF from the Delrin 150 page)
+11. Cross-links to any educational articles (17.5) that reference this material
+
+SEO metadata, per page: use `generateMetadata` in the Next.js App Router.
+Title from `meta_title`, description from `meta_description`. Add JSON-LD
+structured data using the `Product` schema (material as product, `material`
+and `additionalProperty` for density/tolerance/brands) so search engines can
+surface spec data directly in results.
+
+### 17.4 — Images: sourcing rules, read before generating anything
+
+Two acceptable sources only:
+
+1. **Manufacturer-provided product photography**, if you have a distributor
+   relationship that provides it for marketing use — confirm licensing terms
+   explicitly before using anything a distributor sends you.
+2. **AI-generated images** created for this project specifically — a rendered
+   photograph-style image of a squared plastic blank on a neutral background,
+   in that material's true color, generated fresh for this site.
+
+**Do not scrape, screenshot, or reuse images found via web or image search from
+distributor sites, stock photo sites, or competitor pages.** Those are
+copyrighted, and using them creates real legal exposure for a business this
+small. This applies even to a generic-looking product photo — genericness does
+not make it unlicensed.
+
+If image generation is available in your Claude Code environment, generate one
+image per material: a photograph-style render of a cut, squared blank in that
+material's characteristic color and surface finish (PEEK bone, Ultem amber
+translucent, Delrin white or black, PTFE white with slight surface texture, G10
+green woven-glass pattern), lit simply, on a neutral background, no visible
+branding or watermark. If generation is not available in this environment, use
+solid-color placeholder swatches per material (the palette already defined) and
+flag clearly in your response that real photography is a pre-launch requirement,
+not a nice-to-have — a page selling material sight-unseen needs to show it.
+
+### 17.5 — Educational articles
+
+Standalone long-form pages, not tied to a single material, targeting a specific
+search a buyer runs before they've found a supplier. These are markdown content
+files rendered at `/learn/[slug]`, cross-linked from relevant material pages
+and from a "Learn" index.
+
+Write these five to start:
+
+1. **"Why PEEK and Ultem blanks warp after cutting"** — residual stress,
+   plainly explained, the 48-hour flatness window, when annealing is worth
+   paying for. Links to PEEK, Ultem, and PPS material pages and to the
+   annealing add-on.
+2. **"PEEK machining tolerances: what a saw can and can't hold"** — the
+   ±0.030 / ±0.015 / ±0.010 span-limited tolerance system, explained the way a
+   machinist would want it explained, with the actual span limits from config.
+   Links to the quote tool's tolerance tier selector.
+3. **"Why your Ultem parts crack after cleaning"** — the IPA stress-cracking
+   issue, told as a cautionary explanation, not a sales pitch. Links to Ultem
+   pages and the cleanroom-pack add-on.
+4. **"Buying a small PEEK blank without buying a whole sheet"** — the MOQ /
+   cash-flow problem, told straight, with the real worked-example arithmetic
+   already developed for the landing page. This is the page most likely to
+   rank for a buyer who is actively frustrated with a distributor's minimum
+   right now.
+5. **"G10 and FR4: why it destroys carbide blades and what that means for
+   your quote"** — the abrasion economics, explained honestly enough that a
+   buyer trusts the batching/composite-day lead time instead of being annoyed
+   by it.
+
+Each article: 600-900 words, one clear thesis, no keyword stuffing, plain
+sentences. Same copy rules as the rest of the site — active voice, no marketing
+adjectives doing the work numbers should do. End each with a link to the
+relevant material page(s) and, where natural, a link straight into `/quote`.
+
+### 17.6 — Homepage integration
+
+Add one section to the homepage, positioned after the hero quote tool and
+before the deeper landing-page content already built in Phase 8. Not a
+dramatic slab — a quiet, well-labeled entry point:
+
+- Short header: "Materials we stock"
+- A horizontal scroll or condensed grid of 4-6 featured material cards (not
+  all 12 — feature the ones most likely to convert: PEEK natural, Ultem 1000,
+  Delrin, G10)
+- A single link: "See all materials and specs" → `/materials`
+
+This is a secondary CTA. It must not compete visually with the primary hero
+quote tool for attention.
+
+### Definition of done — Phase 9
+
+- [ ] `/materials` renders a card for every material in config.json — adding a
+      material to config and re-running the build produces its card and page
+      automatically, no manual page creation
+- [ ] Every detail page's spec table matches config.json exactly — change a
+      number in config, the page reflects it on rebuild
+- [ ] No caution or flag appears on a page unless the matching flag is true in
+      config for that material
+- [ ] No image on the site was scraped, screenshotted, or reused from another
+      company's site
+- [ ] Every material page's price CTA correctly pre-fills the quote tool with
+      that material selected
+- [ ] All five articles exist, are cross-linked from relevant material pages,
+      and are reachable from a `/learn` index
+- [ ] `generateMetadata` produces a distinct title and description per material
+      and per article page — verify no two pages share identical metadata
+- [ ] JSON-LD structured data validates (test with Google's Rich Results Test)
+- [ ] Homepage materials section does not visually compete with the hero quote
+      tool
+- [ ] Lighthouse SEO score ≥ 95 on `/materials`, a sample detail page, and a
+      sample article
+
+---
+
+## 18. PHASE 10 — HOMEPAGE STYLING, MODELED ON NOX METALS
+
+Restyles the homepage built in Phase 8 to follow Nox Metals' actual current
+site structure (noxmetals.co, verified live as of drafting), translated to
+plastics and to this project's own dimensional-annotation design system from
+Phase 8 — not a copy-paste, a structural model. Do not start before Phase 9,
+since the "shop by material" section reuses Phase 9's material data.
+
+### What Nox's site actually does, section by section
+
+Fetched from their live homepage rather than from memory, so the translation
+below is grounded in what exists, not what's assumed to exist.
+
+1. **Full-width hero video** behind a two-line headline and one short subhead,
+   with a single primary button ("Get Metal Fast")
+2. **A scrolling strip of client logos** directly under the hero
+3. **A tabbed "shop by" grid** — alloy or shape — where each card shows a
+   periodic-table-style element composition breakdown, a one-line description,
+   and a "Shop now" link that deep-links straight into a pre-filled quote
+4. **An AI/nesting explainer section** with a live-dashboard-style visual:
+   customer job tickets flowing into a "DROP" panel showing yield percentage,
+   number of layouts evaluated, and estimated hours — i.e., they show their
+   nesting engine actually working, as a piece of marketing
+5. **A short manifesto paragraph** — plain, unadorned, about who they built the
+   company for
+6. **A featured guides strip** — four educational article cards
+7. **A second, final quote CTA band** near the footer
+8. **A footer** with a real street address, phone, email, social links, and a
+   quality-policy link
+
+Nothing here is exotic. It's a well-executed version of ordinary e-commerce
+patterns, aimed at an industrial buyer instead of a consumer.
+
+### Translation to this site, section by section
+
+**1. Hero.** Keep what Phase 8 already specified: the live quote tool with the
+dimensioned blank rendered as an engineering drawing, updating as the customer
+types. Do not add a background video — Nox is selling a 30,000 sq ft automated
+facility; this business is selling speed and trust from a one-person shop, and
+a stock-feeling video would work against it. The honest version of "showing the
+machine" here is showing the *price resolve in real time*, which Phase 8
+already does. One line above it, matching Nox's brevity: *"Aerospace plastics,
+cut to your size. Priced in seconds, certified the same day."*
+
+**2. Trust strip — do not fabricate this.** Nox shows real client logos:
+Safran, Impulse Space, Stoke Space, actual named companies who buy from them.
+**There are no customers yet.** Do not create a placeholder logo strip, do not
+use stock company logos, and do not invent names. A fabricated client list is
+not a stylistic shortcut — it is a false claim of trust, and if a real visitor
+ever recognizes it as fake, it costs more credibility than having no strip at
+all. Instead, build this section but leave it dormant: a horizontal strip
+component that displays nothing until real logos exist, with a code comment
+explaining why, and a note in your response to the owner that this section
+activates after the first 5-10 real customers agree to be named. If
+certifications are actually held (ISO, AS9100) show that badge here instead —
+but only ones actually earned. Do not display "ISO 9001:2015 certified" or any
+compliance badge unless the business has genuinely completed that
+certification. Check `lib/brand.ts` for a certifications field; if none is
+set, show nothing here.
+
+**3. "Shop by material" tabbed grid.** This is the one section worth
+replicating closely, and it should reuse the material data already built in
+Phase 9 rather than duplicating it. Two tabs: **By material family** (PEEK,
+Ultem, Delrin, PTFE, PPS, Torlon, G10) and **By form** — for now this is just
+"sheet," since the shop only cuts flat stock, but build the tab structure so
+round rod or tube can be added later without a rework. Each card, sourced from
+`config.json` + `lib/materials/content.ts` (Phase 9):
+
+- Material swatch color
+- Name and one-line description (`hero_line`)
+- A composition-style micro-fact row, styled like Nox's periodic-table
+  chemistry callout but showing what's actually relevant to a plastic:
+  density, max continuous service temperature if you have it, or the
+  brands-available count — pick two or three facts that read as credible
+  specs, not decoration
+- "Shop now" link that deep-links to `/quote?material=PEEK_NAT`, pre-filling
+  the quote tool exactly the way Nox's cart-encoded links do
+
+**4. Nesting explainer — build this honestly, because the engine is real.**
+Nox shows a live-feeling dashboard of their nesting AI: yield percentage,
+layouts evaluated, estimated hours. This project has the exact same underlying
+engine — it's what Phase 2 built. This section should not be faked; wire it to
+real output from `lib/pricing/nesting.ts`. Build a static illustrative panel
+using the actual reference numbers already proven in testing: one order alone
+reaching roughly 14% sheet utilisation, three orders batched onto the same
+sheet reaching roughly 51%. Label it honestly as an illustration of how
+batching works, not a live customer feed — there is no live order flow yet, and
+presenting a static illustration as live data would be the same kind of false
+claim as the fabricated logo strip. Content, adapted from Nox's framing:
+
+> Every cut is a decision. On a sliding table saw, a single 12x12 order uses
+> under half the sheet. Batch it with two others cutting the same material
+> and thickness, and the same sheet clears half its area for scrap instead of
+> most of it. [illustrative yield comparison, sourced from real nester output]
+
+Do not claim "AI-trained scheduling" or "machine learning" anywhere on this
+site. The nester is a deterministic guillotine-packing algorithm — genuinely
+the correct tool for a single sliding table saw, and worth being proud of, but
+it is not machine learning and claiming otherwise is a false technical claim a
+knowledgeable buyer (exactly this audience) will catch immediately.
+
+**5. Manifesto paragraph.** Short, plain, no adjectives doing work numbers
+should do. Model the tone, not the content — Nox's version names their buyer
+archetypes (the three-man shop, the aerospace buyer juggling suppliers) and
+states plainly who they built for. This one should do the same using the
+actual pain points already established in the brief:
+
+> Every Tier-2 and Tier-3 shop running a defense or aerospace contract has
+> waited on a distributor to answer a $400 quote request. We built this for
+> them: a firm price in seconds, a blank that's actually square, and
+> certification paperwork the same day we cut — not the same week.
+
+**6. Featured guides strip.** Direct port of Nox's pattern, populated from the
+five articles already built in Phase 9. Four-card grid, title plus one-line
+description, linking to `/learn/[slug]`.
+
+**7. Final CTA band.** Reuse Nox's placement and framing pattern: *"Your
+distributor takes three days. We take five seconds."* Link straight back to
+the quote tool.
+
+**8. Footer.** Real address (El Cajon or Miramar, once the lease is signed —
+until then, use the owner's confirmed mailing address), real phone, real
+email, and the `/quality-policy` link only if a documented quality policy
+actually exists. Do not fabricate compliance language in the footer.
+
+### What not to carry over from Nox
+
+- **No fabricated logos, testimonials, or certifications.** Covered above,
+  repeated because it is the single most tempting shortcut in this phase.
+- **No "AI" or "machine learning" claims for the nester.** It's deterministic
+  and that is the correct and honest description.
+- **No hero video.** Wrong scale for a one-person shop; the live quote tool is
+  the stronger and more honest hero.
+- **No dashboard implying live multi-customer order flow.** There is none yet.
+  Label illustrative content as illustrative.
+
+### Definition of done — Phase 10
+
+- [ ] Homepage follows the eight-section structure above, in order
+- [ ] Trust-strip component exists but renders nothing until real client names
+      are added, with that condition documented in a code comment
+- [ ] No certification badge appears unless set in `lib/brand.ts`
+- [ ] "Shop by material" cards pull every fact from `config.json` and
+      `lib/materials/content.ts` — no hand-typed duplicate data
+- [ ] Nesting explainer content is labeled as illustrative and sourced from
+      actual `nesting.ts` output, not fabricated numbers
+- [ ] No "AI" or "machine learning" language appears anywhere describing the
+      nester
+- [ ] Featured guides strip pulls from the five Phase 9 articles
+- [ ] Footer contact details are real, not placeholder text
+- [ ] Design system (palette, type, motion) from Phase 8 is unchanged — this
+      phase restructures sections, it does not introduce a new visual language
