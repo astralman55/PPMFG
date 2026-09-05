@@ -5,6 +5,8 @@ import { useSearchParams } from "next/navigation";
 import cfgJson from "@/lib/pricing/config.json";
 import { parse_fraction_input, DimensionInputError } from "@/lib/pricing/fractions";
 import type { PricingConfig, QuoteResult, LineItemInput } from "@/lib/pricing/engine";
+import type { SoloNestResult } from "@/lib/pricing/solo-nest";
+import { SheetDiagram } from "./SheetDiagram";
 
 const CFG = cfgJson as unknown as PricingConfig;
 
@@ -77,7 +79,7 @@ function money(n: number): string {
 }
 
 /** What /api/quote returns: the engine's result plus persistence fields. */
-type QuoteApiResult = QuoteResult & { quote_id: string; expires_at: string };
+type QuoteApiResult = QuoteResult & { quote_id: string; expires_at: string; solo_nest: SoloNestResult | null };
 
 export default function QuotePage() {
   return (
@@ -544,7 +546,7 @@ function QuoteForm() {
         )}
       </section>
 
-      <section className="mt-8">
+      <section id="lead-time-table" className="mt-8">
         <h2 className="text-lg font-medium">Lead time and price</h2>
         {apiError && <p className="mt-2 text-sm text-red-600">{apiError}</p>}
         {loading && <p className="mt-2 text-sm text-neutral-500">Pricing...</p>}
@@ -614,6 +616,10 @@ function QuoteForm() {
                 ))}
               </ul>
             )}
+
+            {selected.solo_nest?.groups.map((g, i) => (
+              <SheetDiagram key={`${g.material_code}-${g.brand}-${g.thickness_nominal}-${g.certification_tier}-${i}`} group={g} />
+            ))}
 
             <div className="mt-4 space-y-3 border-t border-neutral-300 pt-4 dark:border-neutral-700">
               <label className="flex flex-col gap-1 text-sm">

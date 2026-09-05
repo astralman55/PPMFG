@@ -3,6 +3,7 @@ import { quote, QuoteError, type PricingConfig } from "@/lib/pricing/engine";
 import cfgJson from "@/lib/pricing/config.json";
 import { QuoteRequestSchema } from "@/lib/validation/quote";
 import { saveQuote } from "@/lib/quotes/store";
+import { buildSoloNest, type SoloNestResult } from "@/lib/pricing/solo-nest";
 
 const CFG = cfgJson as unknown as PricingConfig;
 
@@ -52,10 +53,24 @@ export async function POST(req: Request): Promise<Response> {
     throw e;
   }
 
+  // CLAUDE_CODE_BRIEF.md §19 (Phase 11): a read-only preview of how this
+  // request's own lines alone would sit on a fresh sheet. It never touches
+  // nest_runs or the remnant register, and a failure here must never break
+  // pricing - if it throws for any reason, the quote still returns, just
+  // without a diagram.
+  let solo_nest: SoloNestResult | null = null;
+  try {
+    solo_nest = buildSoloNest(result.lines, CFG);
+  } catch (e) {
+    console.error("[api/quote] solo nest preview failed:", e);
+  }
+
+  const resultWithPreview = { ...result, solo_nest };
+
   const saved = await saveQuote(
     {
       request_json: { ...input, order_date },
-      result_json: result,
+      result_json: resultWithPreview,
       subtotal_cents: Math.round(result.totals.subtotal_goods * 100),
       shipping_cents: Math.round(result.totals.shipping * 100),
       total_cents: result.totals.total_cents,
@@ -65,5 +80,5 @@ export async function POST(req: Request): Promise<Response> {
     CFG.quote.validity_hours
   );
 
-  return NextResponse.json({ ...result, quote_id: saved.id, expires_at: saved.expires_at });
+  return NextResponse.json({ ...resultWithPreview, quote_id: saved.id, expires_at: saved.expires_at });
 }

@@ -90,4 +90,14 @@ describe("POST /api/quote", () => {
     const res = await postJson({ lines: [] });
     expect(res.status).toBe(400);
   });
+
+  test("includes a read-only solo nest preview computed from this request's own lines (§19)", async () => {
+    const res = await postJson(canonicalInput);
+    const body = await res.json();
+    expect(body.solo_nest.groups).toHaveLength(1);
+    const g = body.solo_nest.groups[0];
+    expect(g.material_code).toBe("PEEK_NAT");
+    expect(g.sheet_count).toBeGreaterThan(0);
+    expect(g.sheets[0].placements.length).toBeGreaterThan(0);
+  });
 });
