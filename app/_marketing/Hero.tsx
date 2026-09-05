@@ -33,7 +33,7 @@ export function Hero() {
   const [toleranceTier, setToleranceTier] = useState("STANDARD");
 
   const [results, setResults] = useState<Partial<Record<string, QuoteApiResult>>>({});
-  const [selectedTier, setSelectedTier] = useState("STD");
+  const [selectedTier, setSelectedTier] = useState("RUSH24");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [drawKey, setDrawKey] = useState(0);
@@ -258,15 +258,25 @@ export function Hero() {
           {LEAD_TIER_ORDER.map((tier) => {
             const r = results[tier];
             const isSelected = tier === selectedTier;
+            const unavailable = r ? !r.lead_time.available : false;
             return (
               <button
                 key={tier}
-                onClick={() => setSelectedTier(tier)}
-                className={`grid w-full grid-cols-[1fr_auto_auto] items-baseline gap-x-3 border-b border-rule py-2.5 text-left text-sm sm:gap-x-6 ${isSelected ? "bg-rule/40" : ""}`}
+                onClick={() => !unavailable && setSelectedTier(tier)}
+                disabled={unavailable}
+                className={`grid w-full grid-cols-[1fr_auto_auto] items-baseline gap-x-3 border-b border-rule py-2.5 text-left text-sm sm:gap-x-6 ${
+                  isSelected ? "bg-rule/40" : ""
+                } ${unavailable ? "cursor-not-allowed text-graphite/50" : ""}`}
               >
                 <span>{CFG.lead_tiers[tier].label}</span>
-                <span className="font-mono tabular-nums">{r ? money(r.totals.total_due) : "—"}</span>
-                <span className="font-mono tabular-nums">{r ? r.lead_time.promised_ship_date : "—"}</span>
+                {unavailable ? (
+                  <span className="col-span-2 text-xs">Unavailable today - shop is closed</span>
+                ) : (
+                  <>
+                    <span className="font-mono tabular-nums">{r ? money(r.totals.total_due) : "—"}</span>
+                    <span className="font-mono tabular-nums">{r ? r.lead_time.promised_ship_date : "—"}</span>
+                  </>
+                )}
               </button>
             );
           })}

@@ -688,23 +688,38 @@ function QuoteForm() {
             <tbody>
               {LEAD_TIER_ORDER.map((tier) => {
                 const r = results[tier];
+                const unavailable = r ? !r.lead_time.available : false;
                 return (
-                  <tr key={tier} className="border-b border-neutral-200 dark:border-neutral-800">
+                  <tr
+                    key={tier}
+                    className={`border-b border-neutral-200 dark:border-neutral-800 ${
+                      unavailable ? "text-neutral-400 dark:text-neutral-600" : ""
+                    }`}
+                  >
                     <td className="py-2 pr-4">
                       <input
                         type="radio"
                         name="lead_tier"
+                        disabled={unavailable}
                         checked={selectedTier === tier}
                         onChange={() => setSelectedTier(tier)}
                       />
                     </td>
                     <td className="py-2 pr-4">{CFG.lead_tiers[tier].label}</td>
-                    <td className="py-2 pr-4 font-mono tabular-nums">
-                      {r ? money(r.totals.total_due) : "—"}
-                    </td>
-                    <td className="py-2 pr-4 font-mono tabular-nums">
-                      {r ? r.lead_time.promised_ship_date : "—"}
-                    </td>
+                    {unavailable ? (
+                      <td className="py-2 pr-4 text-xs" colSpan={2}>
+                        Unavailable today - shop is closed
+                      </td>
+                    ) : (
+                      <>
+                        <td className="py-2 pr-4 font-mono tabular-nums">
+                          {r ? money(r.totals.total_due) : "—"}
+                        </td>
+                        <td className="py-2 pr-4 font-mono tabular-nums">
+                          {r ? r.lead_time.promised_ship_date : "—"}
+                        </td>
+                      </>
+                    )}
                   </tr>
                 );
               })}

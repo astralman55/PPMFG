@@ -1259,6 +1259,7 @@ interface LeadTimeResult {
   lead_label: string;
   anneal_days_added: number;
   composite_note: string | null;
+  available: boolean;
 }
 
 function lead_time(
@@ -1269,6 +1270,13 @@ function lead_time(
 ): LeadTimeResult {
   const tier = cfg.lead_tiers[req.lead_tier];
   const start = req.order_date ?? DEFAULT_ORDER_DATE;
+
+  // A same-day tier only means something if the shop is open on the order
+  // date. add_business_days() silently rolls a 0-day offset forward to the
+  // next open day, which - on a weekend or holiday - lands on the exact same
+  // date a 1-business-day tier would produce. Flag that collision so the UI
+  // doesn't charge the same-day premium for a date identical to next-day's.
+  const available = tier.ship_offset_business_days !== 0 || is_business_day(start, cfg);
 
   let offset = tier.ship_offset_business_days;
   if (any_anneal) {
@@ -1307,6 +1315,7 @@ function lead_time(
     lead_label: tier.label,
     anneal_days_added: any_anneal ? cfg.annealing.adds_business_days : 0,
     composite_note,
+    available,
   };
 }
 

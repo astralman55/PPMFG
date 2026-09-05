@@ -330,6 +330,30 @@ describe("lead tiers", () => {
   });
 });
 
+describe("same-day availability", () => {
+  // 2026-09-03 is a Thursday (business day); 2026-09-05/06 is a Sat/Sun.
+  test("SAMEDAY is available, and ships that day, when ordered on a business day", () => {
+    const r = q({ lead_tier: "SAMEDAY", order_date: "2026-09-03" });
+    expect(r.lead_time.available).toBe(true);
+    expect(r.lead_time.promised_ship_date).toBe("2026-09-03");
+  });
+  test("SAMEDAY is flagged unavailable when ordered on a day the shop is closed", () => {
+    const r = q({ lead_tier: "SAMEDAY", order_date: "2026-09-05" });
+    expect(r.lead_time.available).toBe(false);
+  });
+  test("an unavailable SAMEDAY collapses onto the same date as RUSH24, which is why it must be flagged", () => {
+    const sameday = q({ lead_tier: "SAMEDAY", order_date: "2026-09-05" });
+    const rush24 = q({ lead_tier: "RUSH24", order_date: "2026-09-05" });
+    expect(sameday.lead_time.promised_ship_date).toBe(rush24.lead_time.promised_ship_date);
+  });
+  test("tiers other than SAMEDAY stay available regardless of what day the order lands on", () => {
+    for (const tier of ["RUSH24", "RUSH48", "STD", "FLEX"] as const) {
+      expect(q({ lead_tier: tier, order_date: "2026-09-05" }).lead_time.available).toBe(true);
+      expect(q({ lead_tier: tier, order_date: "2026-09-06" }).lead_time.available).toBe(true);
+    }
+  });
+});
+
 // ---------------------------------------------------------------------------
 // [8] Add-ons
 // ---------------------------------------------------------------------------
