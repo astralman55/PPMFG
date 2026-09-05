@@ -1,6 +1,6 @@
 import { Header } from "./_marketing/Header";
 import { Hero } from "./_marketing/Hero";
-import { ThreeCosts, WhatYouGet, Materials, TwoWaysToBuy, Certification, WhyNoDrawings, Faq } from "./_marketing/Sections";
+import { MaterialsPreview, ThreeCosts, WhatYouGet, TwoWaysToBuy, Certification, WhyNoDrawings, Faq } from "./_marketing/Sections";
 import { Footer } from "./_marketing/Footer";
 
 export default function LandingPage() {
@@ -8,9 +8,9 @@ export default function LandingPage() {
     <main className="bg-paper text-ink">
       <Header />
       <Hero />
+      <MaterialsPreview />
       <ThreeCosts />
       <WhatYouGet />
-      <Materials />
       <TwoWaysToBuy />
       <Certification />
       <WhyNoDrawings />

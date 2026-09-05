@@ -1,6 +1,9 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import cfgJson from "@/lib/pricing/config.json";
 import type { PricingConfig } from "@/lib/pricing/engine";
+import { sheetVsBlankComparison } from "@/lib/materials/sheet-economics";
+import { materialContent } from "@/lib/materials/content";
 import { materialSwatch } from "./swatches";
 
 const CFG = cfgJson as unknown as PricingConfig;
@@ -19,12 +22,7 @@ function Section({ children, className = "" }: { children: ReactNode; className?
 
 /** §11 section 3: "a real worked comparison and visible arithmetic." Computed from config.json, not hand-typed. */
 export function ThreeCosts() {
-  const mat = CFG.materials.PEEK_NAT;
-  const sheetVolumeIn3 = mat.sheet_length_in * mat.sheet_width_in * 0.5;
-  const sheetWeightLb = sheetVolumeIn3 * mat.density_lb_in3;
-  const sheetRawCost = sheetWeightLb * mat.price_per_lb;
-  const blankVolumeIn3 = 12 * 12 * 0.5;
-  const blankRawCost = blankVolumeIn3 * mat.density_lb_in3 * mat.price_per_lb;
+  const c = sheetVsBlankComparison(CFG, "PEEK_NAT", 0.5, 12, 12);
 
   return (
     <Section>
@@ -33,9 +31,9 @@ export function ThreeCosts() {
         <div>
           <p className="font-medium">The minimum order</p>
           <p className="mt-2 text-sm text-graphite">
-            A {mat.sheet_length_in} x {mat.sheet_width_in} in PEEK sheet at 0.5 in runs {sheetWeightLb.toFixed(1)} lb of raw
-            material - about {money0(sheetRawCost)} before any cutting. A single 12 x 12 in blank needs{" "}
-            {money0(blankRawCost)} of it. The other {money0(sheetRawCost - blankRawCost)} sits on a shelf.
+            A {c.sheetLengthIn} x {c.sheetWidthIn} in PEEK sheet at {c.thicknessIn} in runs {c.sheetWeightLb.toFixed(1)} lb of raw
+            material - about {money0(c.sheetRawCost)} before any cutting. A single 12 x 12 in blank needs{" "}
+            {money0(c.blankRawCost)} of it. The other {money0(c.shelfRemainderCost)} sits on a shelf.
           </p>
         </div>
         <div>
@@ -95,25 +93,34 @@ export function WhatYouGet() {
   );
 }
 
-export function Materials() {
+/**
+ * §17.6: a quiet entry point into the full /materials library, not a second
+ * full grid competing with the one now living there. Featured materials
+ * chosen for likely conversion, not alphabetically or by family.
+ */
+const FEATURED_MATERIALS = ["PEEK_NAT", "ULTEM_1000", "DELRIN_150", "G10_FR4"];
+
+export function MaterialsPreview() {
   return (
     <Section>
-      <Heading>Materials</Heading>
-      <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {Object.entries(CFG.materials).map(([code, m]) => (
-          <div key={code} className="flex gap-3 border border-rule p-4">
-            <div className="h-12 w-12 shrink-0 border border-rule" style={{ background: materialSwatch(code) }} />
-            <div>
+      <div className="flex items-baseline justify-between">
+        <Heading>Materials we stock</Heading>
+        <Link href="/materials" className="text-sm text-amber hover:underline">
+          See all materials and specs
+        </Link>
+      </div>
+      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {FEATURED_MATERIALS.map((code) => {
+          const m = CFG.materials[code];
+          const content = materialContent[code];
+          return (
+            <Link key={code} href={`/materials/${content.slug}`} className="flex flex-col gap-2 border border-rule p-4 hover:border-ink">
+              <div className="h-10 w-10 border border-rule" style={{ background: materialSwatch(code) }} aria-hidden />
               <p className="font-medium">{m.label}</p>
-              <p className="text-xs text-graphite">{m.family}</p>
-              <p className="mt-1 font-mono text-xs tabular-nums text-graphite">
-                {m.density_lb_in3.toFixed(4)} lb/in³ - {m.stock_thicknesses_in[0]}-
-                {m.stock_thicknesses_in[m.stock_thicknesses_in.length - 1]} in stock
-              </p>
-              <p className="mt-1 text-xs text-graphite">{Object.keys(m.brands).length - 1} named brand(s) available</p>
-            </div>
-          </div>
-        ))}
+              <p className="text-xs text-graphite">{content.hero_line}</p>
+            </Link>
+          );
+        })}
       </div>
     </Section>
   );
