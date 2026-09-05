@@ -1,6 +1,3 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
 import cfgJson from "@/lib/pricing/config.json";
 import type { PricingConfig } from "@/lib/pricing/engine";
@@ -10,25 +7,18 @@ import { materialSwatch } from "./swatches";
 const CFG = cfgJson as unknown as PricingConfig;
 
 /**
- * CLAUDE_CODE_BRIEF.md §18, section 3 - the one section worth replicating
- * closely from Nox. Two tabs: by material family, and by form. Only "sheet"
- * exists as a form today, but the tab structure is built so rod or tube can
- * be added later without a rework - see the FORM_TABS map below.
+ * The complete material list, grouped by family - deliberately no tabbed
+ * "by family / by form" toggle here anymore. That was modeled too closely
+ * on Nox Metals' own tabbed grid; this is the plain, complete list instead,
+ * with the "Shop now" deep-link into /quote kept.
  */
-const FORM_TABS: Record<string, string[]> = {
-  Sheet: Object.keys(CFG.materials),
-};
-
 export function ShopByMaterial() {
-  const [tab, setTab] = useState<"family" | "form">("family");
-
   const byFamily = new Map<string, string[]>();
   for (const [code, m] of Object.entries(CFG.materials)) {
     const list = byFamily.get(m.family) ?? [];
     list.push(code);
     byFamily.set(m.family, list);
   }
-  const groups = tab === "family" ? Array.from(byFamily.entries()) : Object.entries(FORM_TABS);
 
   return (
     <section className="mx-auto max-w-5xl border-t border-rule px-4 py-14">
@@ -39,25 +29,10 @@ export function ShopByMaterial() {
         </Link>
       </div>
 
-      <div className="mt-4 flex gap-4 border-b border-rule text-sm">
-        <button
-          onClick={() => setTab("family")}
-          className={`border-b-2 pb-2 ${tab === "family" ? "border-ink font-medium" : "border-transparent text-graphite"}`}
-        >
-          By material family
-        </button>
-        <button
-          onClick={() => setTab("form")}
-          className={`border-b-2 pb-2 ${tab === "form" ? "border-ink font-medium" : "border-transparent text-graphite"}`}
-        >
-          By form
-        </button>
-      </div>
-
       <div className="mt-6 flex flex-col gap-8">
-        {groups.map(([label, codes]) => (
-          <div key={label}>
-            <h3 className="text-sm font-medium uppercase tracking-wide text-graphite">{label}</h3>
+        {Array.from(byFamily.entries()).map(([family, codes]) => (
+          <div key={family}>
+            <h3 className="text-sm font-medium uppercase tracking-wide text-graphite">{family}</h3>
             <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {codes.map((code) => {
                 const mat = CFG.materials[code];
