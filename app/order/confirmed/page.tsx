@@ -80,7 +80,7 @@ function Shell({ children }: { children: ReactNode }) {
   return (
     <>
       <main className="mx-auto max-w-2xl px-4 py-10 text-neutral-900 dark:text-neutral-100">
-        <Logo className="h-6" priority />
+        <Logo className="h-10" priority />
         <div className="mt-4">{children}</div>
       </main>
       <Footer />

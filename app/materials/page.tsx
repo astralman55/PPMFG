@@ -23,7 +23,7 @@ export default function MaterialsIndexPage() {
   return (
     <>
     <main className="mx-auto max-w-5xl px-4 py-14 text-ink">
-      <Logo className="h-6" priority />
+      <Logo className="h-10" priority />
       <h1 className="mt-4 text-2xl font-medium tracking-tight sm:text-3xl">Materials</h1>
       <p className="mt-2 max-w-2xl text-graphite">Specs, brands and stock thicknesses for every material we cut. Pick one to see the full detail page and get a price.</p>
 

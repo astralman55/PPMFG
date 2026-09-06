@@ -13,7 +13,7 @@ export default function LearnIndexPage() {
   return (
     <>
     <main className="mx-auto max-w-3xl px-4 py-14 text-ink">
-      <Logo className="h-6" priority />
+      <Logo className="h-10" priority />
       <h1 className="mt-4 text-2xl font-medium tracking-tight sm:text-3xl">Learn</h1>
       <p className="mt-2 text-graphite">Straight answers to the questions that come up before an order, not after.</p>
 

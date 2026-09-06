@@ -12,7 +12,7 @@ export default function AboutPage() {
   return (
     <>
     <main className="mx-auto max-w-2xl px-4 py-14 text-ink">
-      <Logo className="h-6" priority />
+      <Logo className="h-10" priority />
       <h1 className="mt-4 text-2xl font-medium tracking-tight sm:text-3xl">About</h1>
       <p className="mt-4 text-graphite">
         {brand.companyName} cuts engineering plastics - PEEK, Ultem, Delrin, PTFE, PPS, Torlon and G10/FR4 - to size, based in{" "}

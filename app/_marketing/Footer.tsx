@@ -26,7 +26,7 @@ export function Footer() {
     <footer className="mx-auto max-w-5xl border-t border-rule px-4 py-10 text-sm text-graphite">
       <div className="flex flex-col gap-6 sm:flex-row sm:justify-between">
         <div>
-          <Logo className="h-7" />
+          <Logo className="h-10" />
           <p className="mt-3">
             {isSet(brand.address.line1) ? `${brand.address.line1}, ` : ""}
             {brand.address.city}, {brand.address.state}

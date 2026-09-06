@@ -64,7 +64,7 @@ export default function DropsPage() {
   return (
     <>
     <main className="mx-auto max-w-5xl px-4 py-14 text-ink">
-      <Logo className="h-6" priority />
+      <Logo className="h-10" priority />
       <h1 className="mt-4 text-2xl font-medium tracking-tight sm:text-3xl">Drops</h1>
       <p className="mt-2 max-w-2xl text-graphite">
         Real offcuts from real orders, still square and still certified to the same lot they came from - at a fraction of a

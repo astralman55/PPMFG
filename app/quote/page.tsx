@@ -374,7 +374,7 @@ function QuoteForm() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10 text-neutral-900 dark:text-neutral-100">
-      <Logo className="h-6" priority />
+      <Logo className="h-10" priority />
       <h1 className="mt-4 text-2xl font-semibold">Get a price</h1>
       <p className="mt-1 text-sm text-neutral-500">
         Enter one blank below. Price updates automatically as you type.
