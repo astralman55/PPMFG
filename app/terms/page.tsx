@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { brand } from "@/lib/brand";
 import { Footer } from "../_marketing/Footer";
+import { Logo } from "../_marketing/Logo";
 
 export const metadata: Metadata = {
   title: "Terms of Sale | Polly Plastics",
@@ -18,11 +19,7 @@ export default function TermsPage() {
   return (
     <>
     <main className="mx-auto max-w-2xl px-4 py-14 text-ink">
-      <p className="text-sm">
-        <Link href="/" className="text-graphite hover:underline">
-          {brand.companyName}
-        </Link>
-      </p>
+      <Logo className="h-6" priority />
       <h1 className="mt-4 text-2xl font-medium tracking-tight sm:text-3xl">Terms of Sale</h1>
       <p className="mt-2 text-sm text-graphite">Last updated {LAST_UPDATED}.</p>
 

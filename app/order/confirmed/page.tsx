@@ -1,8 +1,7 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
 import { getOrderBySessionId } from "@/lib/orders/store";
-import { brand } from "@/lib/brand";
 import { Footer } from "@/app/_marketing/Footer";
+import { Logo } from "@/app/_marketing/Logo";
 
 /**
  * Where Stripe Checkout's success_url sends the buyer, and what the Stage-1
@@ -81,11 +80,7 @@ function Shell({ children }: { children: ReactNode }) {
   return (
     <>
       <main className="mx-auto max-w-2xl px-4 py-10 text-neutral-900 dark:text-neutral-100">
-        <p className="text-sm">
-          <Link href="/" className="text-neutral-500 hover:underline">
-            {brand.companyName}
-          </Link>
-        </p>
+        <Logo className="h-6" priority />
         <div className="mt-4">{children}</div>
       </main>
       <Footer />

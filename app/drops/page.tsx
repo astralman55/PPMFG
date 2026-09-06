@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import cfgJson from "@/lib/pricing/config.json";
 import type { PricingConfig } from "@/lib/pricing/engine";
 import { materialSwatch } from "@/app/_marketing/swatches";
 import { Footer } from "@/app/_marketing/Footer";
+import { Logo } from "@/app/_marketing/Logo";
 import { brand } from "@/lib/brand";
 
 const CFG = cfgJson as unknown as PricingConfig;
@@ -64,11 +64,7 @@ export default function DropsPage() {
   return (
     <>
     <main className="mx-auto max-w-5xl px-4 py-14 text-ink">
-      <p className="text-sm">
-        <Link href="/" className="text-graphite hover:underline">
-          {brand.companyName}
-        </Link>
-      </p>
+      <Logo className="h-6" priority />
       <h1 className="mt-4 text-2xl font-medium tracking-tight sm:text-3xl">Drops</h1>
       <p className="mt-2 max-w-2xl text-graphite">
         Real offcuts from real orders, still square and still certified to the same lot they came from - at a fraction of a

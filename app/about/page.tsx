@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { brand } from "@/lib/brand";
 import { Footer } from "../_marketing/Footer";
+import { Logo } from "../_marketing/Logo";
 
 export const metadata: Metadata = {
   title: "About | Polly Plastics",
@@ -12,11 +12,7 @@ export default function AboutPage() {
   return (
     <>
     <main className="mx-auto max-w-2xl px-4 py-14 text-ink">
-      <p className="text-sm">
-        <Link href="/" className="text-graphite hover:underline">
-          {brand.companyName}
-        </Link>
-      </p>
+      <Logo className="h-6" priority />
       <h1 className="mt-4 text-2xl font-medium tracking-tight sm:text-3xl">About</h1>
       <p className="mt-4 text-graphite">
         {brand.companyName} cuts engineering plastics - PEEK, Ultem, Delrin, PTFE, PPS, Torlon and G10/FR4 - to size, based in{" "}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { brand } from "@/lib/brand";
+import { Logo } from "./Logo";
 
 /** True placeholder values (see lib/brand.ts) never render - showing "REPLACE_WITH_PHONE" to a customer would be worse than showing nothing. */
 function isSet(value: string): boolean {
@@ -25,8 +26,8 @@ export function Footer() {
     <footer className="mx-auto max-w-5xl border-t border-rule px-4 py-10 text-sm text-graphite">
       <div className="flex flex-col gap-6 sm:flex-row sm:justify-between">
         <div>
-          <p className="font-medium text-ink">{brand.companyName}</p>
-          <p className="mt-1">
+          <Logo className="h-7" />
+          <p className="mt-3">
             {isSet(brand.address.line1) ? `${brand.address.line1}, ` : ""}
             {brand.address.city}, {brand.address.state}
             {isSet(brand.address.zip) ? ` ${brand.address.zip}` : ""}

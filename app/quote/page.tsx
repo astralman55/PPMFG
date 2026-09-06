@@ -2,17 +2,16 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
 import cfgJson from "@/lib/pricing/config.json";
 import { parse_fraction_input, DimensionInputError } from "@/lib/pricing/fractions";
 import type { PricingConfig, QuoteResult, LineItemInput } from "@/lib/pricing/engine";
 import type { SoloNestGroup, SoloNestResult } from "@/lib/pricing/solo-nest";
 import { resolveSheetSize } from "@/lib/pricing/sheet-size";
-import { brand } from "@/lib/brand";
 import { SheetDiagram } from "./SheetDiagram";
 import { EmptySheetOutline } from "./EmptySheetOutline";
 import { SpecsAccordion } from "./SpecsAccordion";
 import { Footer } from "../_marketing/Footer";
+import { Logo } from "../_marketing/Logo";
 
 const CFG = cfgJson as unknown as PricingConfig;
 
@@ -375,11 +374,7 @@ function QuoteForm() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10 text-neutral-900 dark:text-neutral-100">
-      <p className="text-sm">
-        <Link href="/" className="text-neutral-500 hover:underline">
-          {brand.companyName}
-        </Link>
-      </p>
+      <Logo className="h-6" priority />
       <h1 className="mt-4 text-2xl font-semibold">Get a price</h1>
       <p className="mt-1 text-sm text-neutral-500">
         Enter one blank below. Price updates automatically as you type.
