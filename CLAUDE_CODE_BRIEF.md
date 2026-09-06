@@ -66,7 +66,7 @@ Every business number lives in `config.json`, never in source.
 | Email | Resend | PDF attachments, simple API |
 | PDF generation | `@react-pdf/renderer` | Invoice, C of C |
 | PDF merging | `pdf-lib` | Merge generated C of C with scanned MTRs |
-| Spreadsheet parsing | `papaparse`, `xlsx` | Dimension upload |
+| Spreadsheet parsing | `papaparse` | Dimension upload (`xlsx` was removed - see §22, Phase 14) |
 | Validation | `zod` at every API boundary | |
 
 No ORM. No state library. No component library.
@@ -83,7 +83,7 @@ No ORM. No state library. No component library.
   /order/[id]/page.tsx             order status + document downloads
   /ops/...                         operator console (auth-gated)
   /api/quote/route.ts              POST -> priced quote, persisted
-  /api/quote/upload/route.ts       POST -> parse CSV/XLSX dimensions
+  /api/quote/upload/route.ts       POST -> parse CSV dimensions (XLSX disabled, §22)
   /api/checkout/route.ts           POST { quote_id } -> Stripe session URL
   /api/webhooks/stripe/route.ts    POST -> order creation + stage-1 docs
   /api/ops/nest/route.ts           POST -> run the nester over the queue
@@ -413,7 +413,11 @@ Per line: material, **brand**, **certification tier**, length, width, thickness
 
 ### 7.2 File upload — dimensions only
 
-Accept `.csv`, `.xlsx`, `.xls`. Provide a downloadable template:
+Accept `.csv`. (Originally also `.xlsx`/`.xls` via the `xlsx` package; disabled
+per Phase 14 §22 after that package's parser turned out to carry two
+unpatched high-severity CVEs reachable from this exact untrusted-upload
+endpoint, with no fixed version on the npm registry. Re-enable only behind a
+maintained parser.) Provide a downloadable template:
 
 ```csv
 part_ref,material_code,brand,certification_tier,length_in,width_in,thickness_in,qty,tolerance_tier,edge_finish
@@ -728,6 +732,7 @@ Stripe retries; double-sending an invoice is a support nightmare.
 | **11** | Solo cut-layout diagram at quote time, per §19 | Diagram for 5× 12×3 parts on a 36×24 sheet, with sheet count and utilisation; no DB write |
 | **12** | Live diagram in the quote builder, per-material/thickness sheet sizing, collapsible specs/PO sections, email-a-quote, per §20 | Diagram updates live with material/thickness; sample `QuoteSummary` PDF |
 | **13** | Capacity & deadline dashboard inside `/ops`, per §21 | Real unfulfilled queue auto-populates; at least one at-risk order flagged with its shortfall; hypothetical order shows its effect before quoting |
+| **14** | Security audit, per §22 — report only, two-step gate | Every category 1-15 in §22 has an actual test/grep result and a RED/YELLOW/GREEN verdict; nothing is fixed until the owner reviews the report and separately authorizes the fix pass |
 
 ---
 
@@ -1633,3 +1638,164 @@ This produces the actual answer to "can we hit what we've promised," not just
 - [ ] Adding a hypothetical order shows its effect on existing promises
       before it's ever quoted to a real customer
 - [ ] No database write occurs anywhere on this screen
+
+---
+
+## 22. PHASE 14 — SECURITY AUDIT
+
+This phase is deliberately split into two steps, and the second step does not
+happen automatically. Step one is a report-only audit: every category below
+gets an actual test, grep, or exploit attempt, ranked RED/YELLOW/GREEN, with
+nothing in the codebase changed. Step two — fixing what the report finds — is
+a separate, explicitly authorized pass that only starts after the owner has
+read the report and approved it. Do not fix anything found in step one without
+that separate authorization, even if the fix looks trivial.
+
+### Severity rubric — use this exact definition
+
+**RED.** Exploitable today, by an ordinary visitor, with real consequences:
+money lost, another customer's data exposed, an order fulfilled or shipped
+incorrectly, or a false certification claim reaching a customer. A red finding
+is treated as blocking launch.
+
+**YELLOW.** Not exploitable by a casual visitor today, but a real weakness: a
+missing defense-in-depth layer, a best practice skipped, something that
+becomes exploitable if one other assumption breaks, or a gap that would fail a
+competent security review. Fix before scaling, not necessarily before a soft
+launch.
+
+**GREEN.** Verified correct — not "looks fine." The report must state what was
+checked and how the protection was confirmed to actually work, not just that
+the code appears to intend it.
+
+A finding with no evidence of how it was checked does not get a color; it gets
+re-tested or reported as unverified.
+
+### What to audit, and why each one matters here specifically
+
+Grounded in the business logic already built, not a generic scan:
+
+1. **Price integrity.** `POST /api/checkout` must read `total_cents` only from
+   the stored `quotes` row, never from the request body. Attempt to pass a
+   manipulated price and confirm it's ignored. Confirm `expires_at` and
+   `consumed_at` are enforced server-side, not just checked client-side.
+2. **Stripe webhook handling.** The raw body must be read with `await
+   req.text()` before any parsing, the signature verified against
+   `STRIPE_WEBHOOK_SECRET`, and the event id inserted into `webhook_events`
+   with a conflict check before any order or email side effect runs. Replay
+   the same event twice and confirm only one order and one email result.
+3. **Secret exposure.** Grep the entire codebase for `SUPABASE_SERVICE_ROLE_KEY`,
+   `STRIPE_SECRET_KEY`, `RESEND_API_KEY`, and `ANTHROPIC_API_KEY`. None may
+   appear in a file or variable prefixed `NEXT_PUBLIC_`, in any client
+   component, or in anything shipped to the browser bundle. Confirm
+   `.env.local` is in `.gitignore` and was never committed — check git
+   history, not just the working tree.
+4. **Row-level security.** For every Supabase table, confirm RLS is enabled
+   and that policies actually restrict access as intended, not merely "on"
+   with a permissive policy. Specifically check whether a customer can read
+   another customer's `quotes`, `orders`, or `order_lines` row by guessing or
+   incrementing an ID.
+5. **Insecure direct object references (IDOR).** `/order/[id]` and
+   `/quote/[id]` are reachable by URL. Confirm IDs are non-guessable UUIDs,
+   not sequential integers, and confirm the data returned for a given ID never
+   includes another customer's information even though the route is
+   intentionally link-accessible without login.
+6. **File upload handling.** Two upload paths exist: the CSV/XLSX dimension
+   upload, and the PDF-only PO upload from Phase 12. For each, confirm
+   rejection is enforced by actual file content (magic bytes), not just the
+   filename extension — attempt a renamed file (e.g. a `.dwg` saved with a
+   `.csv` extension) and confirm it's still rejected. Confirm the PO upload
+   path never invokes any AI or text-extraction call — grep for any code path
+   connecting that storage bucket to `ANTHROPIC_API_KEY` or similar and
+   confirm none exists.
+7. **The quote-parsing AI endpoint, if built.** If `POST /api/quote/parse`
+   exists, confirm raw input text is never written to any table or log, the
+   500-character cap is enforced server-side, and the endpoint cannot be
+   coerced via prompt injection into returning anything other than the strict
+   structured schema — attempt a prompt-injection input and confirm it fails
+   safely rather than leaking instructions or fabricating a material code that
+   doesn't exist in config.
+8. **Email endpoint abuse.** `POST /api/quote/email` must only send to the
+   email already on the quote record. Attempt to pass an alternate
+   destination address and confirm it's rejected. Confirm the per-quote
+   cooldown is enforced server-side and cannot be bypassed by omitting or
+   manipulating a client-sent timestamp.
+9. **Admin auth on `/ops`.** Confirm the entire `/ops` route segment is
+   unreachable without a valid Supabase Auth session, not just hidden from
+   navigation. Attempt to hit an `/ops` API route directly without a session
+   and confirm a 401/403, not a silent success. Confirm there is no hardcoded
+   or default credential anywhere in the codebase.
+10. **Read-only guarantees.** Phase 11's solo diagram and Phase 13's capacity
+    dashboard were both specified as strictly read-only. Grep both features
+    for any `insert`, `update`, `upsert`, or `delete` call and confirm none
+    exists.
+11. **Rate limiting and abuse.** Beyond the email cooldown, check whether
+    `/api/quote` has any protection against being hammered with thousands of
+    requests — a cost and availability concern on Supabase's usage-metered
+    free tier, separate from a security concern. Report as yellow if absent,
+    not red, unless combined with another issue that makes it worse.
+12. **Dependency vulnerabilities.** Run `npm audit` and report every high or
+    critical finding, with the specific package and version. Note which are
+    reachable from actual application code versus dev-only tooling.
+13. **Security headers.** Check for `Content-Security-Policy`,
+    `X-Frame-Options` or equivalent, and `Strict-Transport-Security`. Confirm
+    Stripe's own iframe/redirect flow isn't broken by an overly strict CSP.
+14. **PDF and diagram generation.** The invoice, Certificate of Conformance,
+    and QuoteSummary PDFs, plus the SVG cut diagram, all render data that
+    ultimately traces back to customer input (part reference field, company
+    name, etc.). Confirm no field is interpolated into these documents in a
+    way that could break out of its intended context — check the 40-character
+    part-reference cap is enforced server-side, not just in the UI.
+15. **Certificate accuracy safeguards.** Confirm the hard block from the
+    original brief still holds: an order cannot be marked shipped without
+    every line having a `lot_id` with a populated `mtr_path`. Confirm the
+    DFARS/lineage suppression on `INDUSTRIAL`-tier lines from Phase 4 is still
+    enforced. A regression here is a false compliance claim reaching a real
+    customer, and belongs in this audit's severity ranking, not a separate
+    one.
+
+### Required output format for the audit report
+
+One markdown report, one entry per finding, sorted red first, then yellow,
+then green — in that section order, not alphabetically and not by file:
+
+```
+## RED
+
+### [finding title]
+- **Area:** (which numbered category above)
+- **What's wrong:** plain-language description
+- **Evidence:** file path and line number, or the exact test performed
+- **Why it matters:** the real-world consequence if unfixed
+- **Recommended fix:** one or two sentences, no code yet
+
+## YELLOW
+[same format]
+
+## GREEN
+[same format, but "Recommended fix" becomes "How this was verified"]
+```
+
+End the report with a one-line summary: total red, total yellow, total green.
+
+### What this phase must not do
+
+- Must not modify, patch, or "quickly fix" anything found, even something
+  trivial. This is a report-only pass — fixing happens in a separate,
+  explicitly authorized step.
+- Must not soften a finding's severity to make the report look better. A red
+  finding stays red even if it would be simple to fix.
+- Must not skip a category because it "looks fine at a glance" — every item
+  above requires an actual test or grep, not an assumption.
+
+### Definition of done — Phase 14, step one (audit)
+
+- [ ] All 15 categories above have an actual test, grep, or exploit attempt
+      described — not an assumption
+- [ ] Every finding is assigned RED, YELLOW, or GREEN using the rubric above,
+      with evidence for how it was checked
+- [ ] The report is sorted red, then yellow, then green, in the required
+      format, ending in a one-line severity count
+- [ ] No file in the codebase has been modified
+- [ ] The owner has reviewed the report and separately authorized a fix pass
+      before any RED or YELLOW finding is touched

@@ -56,4 +56,15 @@ describe("POST /api/quote/upload", () => {
     const res = await uploadFile("notes.txt", "hello", "text/plain");
     expect(res.status).toBe(415);
   });
+
+  test.each(["dims.xlsx", "dims.xls"])(
+    "Excel upload (%s) is disabled - CLAUDE_CODE_BRIEF.md Phase 14 §22, the xlsx parsing library had unpatched CVEs",
+    async (name) => {
+      const res = await uploadFile(name, "irrelevant content", "application/vnd.ms-excel");
+      expect(res.status).toBe(415);
+      const body = await res.json();
+      expect(body.error).toContain("Excel upload is temporarily unavailable");
+      expect(body.error).toContain(".csv");
+    }
+  );
 });

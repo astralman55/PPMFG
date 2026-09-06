@@ -4,8 +4,16 @@ import cfgJson from "@/lib/pricing/config.json";
 import { QuoteRequestSchema } from "@/lib/validation/quote";
 import { saveQuote } from "@/lib/quotes/store";
 import { buildSoloNest, type SoloNestResult } from "@/lib/pricing/solo-nest";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 const CFG = cfgJson as unknown as PricingConfig;
+
+// CLAUDE_CODE_BRIEF.md Phase 14 §22 - no abuse protection previously existed
+// on this endpoint. The quote builder itself fires up to 5 requests per
+// keystroke-settle (one per lead tier), so this is generous headroom for a
+// real customer, not a tight budget.
+const RATE_LIMIT_MAX_REQUESTS = 120;
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 
 function todayIso(): string {
   const d = new Date();
@@ -22,6 +30,14 @@ function todayIso(): string {
  * discount, anything) is stripped by zod before it ever reaches the engine.
  */
 export async function POST(req: Request): Promise<Response> {
+  const rate = checkRateLimit(`quote:${getClientIp(req)}`, RATE_LIMIT_MAX_REQUESTS, RATE_LIMIT_WINDOW_MS);
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { error: "Too many pricing requests. Please wait a moment and try again." },
+      { status: 429, headers: { "Retry-After": String(rate.retryAfterSeconds) } }
+    );
+  }
+
   let body: unknown;
   try {
     body = await req.json();

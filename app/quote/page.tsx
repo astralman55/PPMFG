@@ -624,7 +624,7 @@ function QuoteForm() {
       <section className="mt-6 rounded border border-neutral-300 p-4 dark:border-neutral-700">
         <div className="text-sm font-medium">Upload dimensions instead</div>
         <p className="mt-1 text-xs text-neutral-500">
-          Accepts .csv, .xlsx or .xls of dimensions only.{" "}
+          Accepts .csv of dimensions only.{" "}
           <a className="underline" href="/templates/dimension-upload-template.csv" download>
             Download the template
           </a>
@@ -632,7 +632,7 @@ function QuoteForm() {
         </p>
         <input
           type="file"
-          accept=".csv,.xlsx,.xls"
+          accept=".csv"
           className="mt-2 text-sm"
           onChange={(e) => {
             const file = e.target.files?.[0];

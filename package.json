@@ -20,7 +20,6 @@
     "react-dom": "19.1.0",
     "resend": "^6.26.0",
     "stripe": "^22.6.1",
-    "xlsx": "^0.18.5",
     "zod": "^4.5.4"
   },
   "devDependencies": {

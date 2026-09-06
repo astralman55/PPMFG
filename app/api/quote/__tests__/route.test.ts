@@ -1,4 +1,13 @@
-import { describe, test, expect } from "vitest";
+import { describe, test, expect, vi } from "vitest";
+import * as rateLimit from "@/lib/rate-limit";
+
+// Real rate limiting for every test below except the one that specifically
+// exercises the 429 path - see CLAUDE_CODE_BRIEF.md Phase 14 §22.
+vi.mock("@/lib/rate-limit", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/rate-limit")>("@/lib/rate-limit");
+  return { ...actual, checkRateLimit: vi.fn(actual.checkRateLimit) };
+});
+
 import { POST } from "../route";
 import { quote, type QuoteRequestInput, type PricingConfig } from "@/lib/pricing/engine";
 import cfgJson from "@/lib/pricing/config.json";
@@ -99,5 +108,20 @@ describe("POST /api/quote", () => {
     expect(g.material_code).toBe("PEEK_NAT");
     expect(g.sheet_count).toBeGreaterThan(0);
     expect(g.sheets[0].placements.length).toBeGreaterThan(0);
+  });
+
+  // CLAUDE_CODE_BRIEF.md Phase 14 §22 - this endpoint previously had no abuse
+  // protection at all. checkRateLimit()'s own counting logic is exhaustively
+  // unit-tested in lib/__tests__/rate-limit.test.ts; this proves the route
+  // actually wires a denial into a real 429 response, without looping past
+  // the real threshold (a separate concern from whether the counter itself
+  // works).
+  test("returns 429 with a Retry-After header when the rate limiter denies the request", async () => {
+    vi.mocked(rateLimit.checkRateLimit).mockReturnValueOnce({ allowed: false, retryAfterSeconds: 37 });
+    const res = await postJson(canonicalInput);
+    expect(res.status).toBe(429);
+    expect(res.headers.get("Retry-After")).toBe("37");
+    const body = await res.json();
+    expect(body.error).toContain("Too many");
   });
 });
