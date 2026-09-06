@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { brand } from "@/lib/brand";
+import { Footer } from "../_marketing/Footer";
 
 export const metadata: Metadata = {
   title: "About | Polly Plastics",
@@ -9,6 +10,7 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
+    <>
     <main className="mx-auto max-w-2xl px-4 py-14 text-ink">
       <p className="text-sm">
         <Link href="/" className="text-graphite hover:underline">
@@ -29,5 +31,7 @@ export default function AboutPage() {
       <h2 className="mt-10 text-sm font-medium uppercase tracking-wide text-graphite">News</h2>
       <p className="mt-2 text-sm text-graphite">Nothing to report yet - check back as the shop grows.</p>
     </main>
+    <Footer />
+    </>
   );
 }

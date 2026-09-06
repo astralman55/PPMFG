@@ -12,6 +12,7 @@ import { brand } from "@/lib/brand";
 import { SheetDiagram } from "./SheetDiagram";
 import { EmptySheetOutline } from "./EmptySheetOutline";
 import { SpecsAccordion } from "./SpecsAccordion";
+import { Footer } from "../_marketing/Footer";
 
 const CFG = cfgJson as unknown as PricingConfig;
 
@@ -90,9 +91,12 @@ type QuoteApiResult = QuoteResult & { quote_id: string; expires_at: string; solo
 
 export default function QuotePage() {
   return (
-    <Suspense fallback={null}>
-      <QuoteForm />
-    </Suspense>
+    <>
+      <Suspense fallback={null}>
+        <QuoteForm />
+      </Suspense>
+      <Footer />
+    </>
   );
 }
 
@@ -555,6 +559,13 @@ function QuoteForm() {
           {!annealEligible && <span className="text-xs text-neutral-500">(not offered for this material)</span>}
         </label>
 
+        {material.residual_stress_flag && (
+          <p className="text-xs text-neutral-500 sm:col-span-2">
+            {material.label} carries residual stress. A cut blank can bow 0.010-0.025 in within 48 hours as that
+            stress releases - annealing above relaxes it before it ships.
+          </p>
+        )}
+
         <div className="sm:col-span-2">
           <div className="text-sm font-medium">Add-ons</div>
           <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -633,6 +644,7 @@ function QuoteForm() {
         <input
           type="file"
           accept=".csv"
+          aria-label="Upload a CSV file of dimensions"
           className="mt-2 text-sm"
           onChange={(e) => {
             const file = e.target.files?.[0];
@@ -676,13 +688,15 @@ function QuoteForm() {
         {loading && <p className="mt-2 text-sm text-neutral-500">Pricing...</p>}
 
         <div className="mt-3 overflow-x-auto">
-          <table className="w-full min-w-[480px] border-collapse text-sm">
+          <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="border-b border-neutral-300 text-left dark:border-neutral-700">
-                <th className="py-2 pr-4"></th>
-                <th className="py-2 pr-4">Lead time</th>
-                <th className="py-2 pr-4">Price</th>
-                <th className="py-2 pr-4">Ship date</th>
+                <th scope="col" className="py-2 pr-4">
+                  <span className="sr-only">Select</span>
+                </th>
+                <th scope="col" className="py-2 pr-4">Lead time</th>
+                <th scope="col" className="py-2 pr-4">Price</th>
+                <th scope="col" className="py-2 pr-4">Ship date</th>
               </tr>
             </thead>
             <tbody>
@@ -700,6 +714,7 @@ function QuoteForm() {
                       <input
                         type="radio"
                         name="lead_tier"
+                        aria-label={CFG.lead_tiers[tier].label}
                         disabled={unavailable}
                         checked={selectedTier === tier}
                         onChange={() => setSelectedTier(tier)}
@@ -715,7 +730,7 @@ function QuoteForm() {
                         <td className="py-2 pr-4 font-mono tabular-nums">
                           {r ? money(r.totals.total_due) : "—"}
                         </td>
-                        <td className="py-2 pr-4 font-mono tabular-nums">
+                        <td className="py-2 pr-4 font-mono tabular-nums whitespace-nowrap">
                           {r ? r.lead_time.promised_ship_date : "—"}
                         </td>
                       </>
@@ -769,14 +784,6 @@ function QuoteForm() {
 
             {selected.competitive_comparison && (
               <p className="text-xs text-neutral-600 dark:text-neutral-400">{selected.competitive_comparison}</p>
-            )}
-
-            {selected.sanity.flags.length > 0 && (
-              <ul className="space-y-1 text-xs text-amber-700 dark:text-amber-500">
-                {selected.sanity.flags.map((flag, i) => (
-                  <li key={i}>{flag}</li>
-                ))}
-              </ul>
             )}
 
             <div className="mt-4 space-y-3 border-t border-neutral-300 pt-4 dark:border-neutral-700">

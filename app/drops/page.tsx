@@ -5,6 +5,7 @@ import Link from "next/link";
 import cfgJson from "@/lib/pricing/config.json";
 import type { PricingConfig } from "@/lib/pricing/engine";
 import { materialSwatch } from "@/app/_marketing/swatches";
+import { Footer } from "@/app/_marketing/Footer";
 import { brand } from "@/lib/brand";
 
 const CFG = cfgJson as unknown as PricingConfig;
@@ -61,6 +62,7 @@ export default function DropsPage() {
   const brandOptions = material ? Object.entries(material.brands).filter(([code]) => code !== "GENERIC") : [];
 
   return (
+    <>
     <main className="mx-auto max-w-5xl px-4 py-14 text-ink">
       <p className="text-sm">
         <Link href="/" className="text-graphite hover:underline">
@@ -77,6 +79,7 @@ export default function DropsPage() {
         <select
           value={filter.material_code}
           onChange={(e) => setFilter({ ...filter, material_code: e.target.value, brand: "" })}
+          aria-label="Filter by material"
           className="rounded border border-rule bg-paper px-3 py-2 text-sm"
         >
           <option value="">Any material</option>
@@ -90,6 +93,7 @@ export default function DropsPage() {
           value={filter.brand}
           onChange={(e) => setFilter({ ...filter, brand: e.target.value })}
           disabled={!material}
+          aria-label="Filter by brand"
           className="rounded border border-rule bg-paper px-3 py-2 text-sm disabled:opacity-50"
         >
           <option value="">Any brand</option>
@@ -102,6 +106,7 @@ export default function DropsPage() {
         <select
           value={filter.certification_tier}
           onChange={(e) => setFilter({ ...filter, certification_tier: e.target.value })}
+          aria-label="Filter by certification tier"
           className="rounded border border-rule bg-paper px-3 py-2 text-sm"
         >
           <option value="">Any tier</option>
@@ -114,6 +119,7 @@ export default function DropsPage() {
         <select
           value={filter.min_size}
           onChange={(e) => setFilter({ ...filter, min_size: e.target.value })}
+          aria-label="Filter by minimum size"
           className="rounded border border-rule bg-paper px-3 py-2 text-sm"
         >
           {SIZE_BUCKETS.map((b) => (
@@ -177,5 +183,7 @@ export default function DropsPage() {
         </div>
       ) : null}
     </main>
+    <Footer />
+    </>
   );
 }

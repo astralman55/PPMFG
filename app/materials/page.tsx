@@ -3,6 +3,7 @@ import Link from "next/link";
 import cfgJson from "@/lib/pricing/config.json";
 import type { PricingConfig } from "@/lib/pricing/engine";
 import { MaterialCard } from "./MaterialCard";
+import { Footer } from "../_marketing/Footer";
 
 const CFG = cfgJson as unknown as PricingConfig;
 
@@ -20,6 +21,7 @@ export default function MaterialsIndexPage() {
   }
 
   return (
+    <>
     <main className="mx-auto max-w-5xl px-4 py-14 text-ink">
       <p className="text-sm">
         <Link href="/" className="text-graphite hover:underline">
@@ -42,5 +44,7 @@ export default function MaterialsIndexPage() {
         ))}
       </div>
     </main>
+    <Footer />
+    </>
   );
 }

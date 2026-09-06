@@ -7,6 +7,7 @@ import type { PricingConfig } from "@/lib/pricing/engine";
 import { articles, getArticleBySlug } from "@/lib/articles/content";
 import { getMaterialContent } from "@/lib/materials/content";
 import { sheetVsBlankComparison } from "@/lib/materials/sheet-economics";
+import { Footer } from "@/app/_marketing/Footer";
 
 const CFG = cfgJson as unknown as PricingConfig;
 
@@ -59,6 +60,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   if (!article) notFound();
 
   return (
+    <>
     <main className="mx-auto max-w-2xl px-4 py-14 text-ink">
       <p className="text-sm">
         <Link href="/learn" className="text-graphite hover:underline">
@@ -96,5 +98,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         Get price
       </Link>
     </main>
+    <Footer />
+    </>
   );
 }

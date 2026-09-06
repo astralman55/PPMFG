@@ -10,7 +10,7 @@
   --color-ink: #14181c;
   --color-graphite: #6b7280;
   --color-rule: #e3e3de;
-  --color-amber: #b8710f;
+  --color-amber: #9c600d; /* darkened from #b8710f - the lighter value read only 3.78:1 against paper, below WCAG AA's 4.5:1 for normal text (CLAUDE_CODE_BRIEF.md Phase 14 §22, Lighthouse accessibility check) */
 
   --color-swatch-peek: #e8e0ce;
   --color-swatch-ultem: #c88a2e;

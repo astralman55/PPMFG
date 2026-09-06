@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { articles } from "@/lib/articles/content";
+import { Footer } from "../_marketing/Footer";
 
 export const metadata: Metadata = {
   title: "Learn | Polly Plastics",
@@ -9,6 +10,7 @@ export const metadata: Metadata = {
 
 export default function LearnIndexPage() {
   return (
+    <>
     <main className="mx-auto max-w-3xl px-4 py-14 text-ink">
       <p className="text-sm">
         <Link href="/" className="text-graphite hover:underline">
@@ -27,5 +29,7 @@ export default function LearnIndexPage() {
         ))}
       </div>
     </main>
+    <Footer />
+    </>
   );
 }
