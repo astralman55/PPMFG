@@ -5,8 +5,8 @@ import { Footer } from "../_marketing/Footer";
 import { Logo } from "../_marketing/Logo";
 
 export const metadata: Metadata = {
-  title: "Terms of Sale | Polly Plastics",
-  description: "The terms that apply to every order placed with Polly Plastics.",
+  title: "Terms of Sale | Precision Plastics Manufacturing",
+  description: "The terms that apply to every order placed with Precision Plastics Manufacturing.",
 };
 
 const LAST_UPDATED = "September 6, 2026";

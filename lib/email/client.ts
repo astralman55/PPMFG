@@ -38,5 +38,5 @@ export function getResend(): Resend {
  * sending domain is verified in the Resend dashboard.
  */
 export function getFromAddress(): string {
-  return process.env.RESEND_FROM_EMAIL || "Polly Plastics <onboarding@resend.dev>";
+  return process.env.RESEND_FROM_EMAIL || "Precision Plastics Manufacturing <onboarding@resend.dev>";
 }

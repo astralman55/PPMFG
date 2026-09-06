@@ -3,7 +3,7 @@
 // See CLAUDE_CODE_BRIEF.md §16 item 8 re: CAGE code registration.
 
 export const brand = {
-  companyName: "Polly Plastics",
+  companyName: "Precision Plastics Manufacturing",
   address: {
     line1: "REPLACE_WITH_STREET_ADDRESS",
     city: "El Cajon",

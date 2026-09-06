@@ -13,7 +13,7 @@ const archivo = Archivo({
 });
 
 export const metadata: Metadata = {
-  title: "Polly Plastics",
+  title: "Precision Plastics Manufacturing",
   description: "Aerospace plastics, cut to your size. Priced in seconds, certified the same day.",
 };
 

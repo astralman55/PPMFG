@@ -8,7 +8,7 @@ import { Logo } from "../_marketing/Logo";
 const CFG = cfgJson as unknown as PricingConfig;
 
 export const metadata: Metadata = {
-  title: "Materials | Polly Plastics",
+  title: "Materials | Precision Plastics Manufacturing",
   description: "PEEK, Ultem, Delrin, PTFE, PPS, Torlon and G10/FR4 - specs, brands and thicknesses in stock, cut to your size.",
 };
 

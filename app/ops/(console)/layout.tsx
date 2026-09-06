@@ -8,9 +8,9 @@ import { SignOutButton } from "./sign-out-button";
 export default function OpsLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen text-neutral-900 dark:text-neutral-100">
-      <nav className="flex items-center justify-between border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
-        <div className="flex items-center gap-5 text-sm">
-          <span className="font-semibold">Polly Plastics ops</span>
+      <nav className="flex flex-wrap items-center justify-between gap-y-2 border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
+          <span className="font-semibold">Precision Plastics Manufacturing ops</span>
           <Link href="/ops" className="hover:underline">
             Queue
           </Link>

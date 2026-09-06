@@ -4,8 +4,8 @@ import { Footer } from "../_marketing/Footer";
 import { Logo } from "../_marketing/Logo";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Polly Plastics",
-  description: "What information Polly Plastics collects, why, and who it's shared with.",
+  title: "Privacy Policy | Precision Plastics Manufacturing",
+  description: "What information Precision Plastics Manufacturing collects, why, and who it's shared with.",
 };
 
 const LAST_UPDATED = "September 6, 2026";

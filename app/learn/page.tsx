@@ -5,7 +5,7 @@ import { Footer } from "../_marketing/Footer";
 import { Logo } from "../_marketing/Logo";
 
 export const metadata: Metadata = {
-  title: "Learn | Polly Plastics",
+  title: "Learn | Precision Plastics Manufacturing",
   description: "Plain-language guides on residual stress, tolerance limits, solvent sensitivity and the real economics of buying cut plastic.",
 };
 

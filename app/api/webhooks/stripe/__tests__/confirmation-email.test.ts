@@ -8,7 +8,7 @@ const sendMock = vi.fn();
 // attached to an actual order, not that some function was merely invoked.
 vi.mock("@/lib/email/client", () => ({
   resendConfigured: () => true,
-  getFromAddress: () => "Polly Plastics <test@example.com>",
+  getFromAddress: () => "Precision Plastics Manufacturing <test@example.com>",
   getResend: () => ({ emails: { send: sendMock } }),
 }));
 

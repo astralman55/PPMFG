@@ -5,7 +5,7 @@ import { Footer } from "../_marketing/Footer";
 import { Logo } from "../_marketing/Logo";
 
 export const metadata: Metadata = {
-  title: "Returns & Refunds | Polly Plastics",
+  title: "Returns & Refunds | Precision Plastics Manufacturing",
   description: "How cancellations, defects, and refunds work for custom-cut orders.",
 };
 

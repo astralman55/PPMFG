@@ -4,7 +4,7 @@ import { Footer } from "../_marketing/Footer";
 import { Logo } from "../_marketing/Logo";
 
 export const metadata: Metadata = {
-  title: "About | Polly Plastics",
+  title: "About | Precision Plastics Manufacturing",
   description: "Engineering plastics cut to size in El Cajon, CA - priced in seconds, certified the same day.",
 };
 
