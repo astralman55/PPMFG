@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import cfgJson from "@/lib/pricing/config.json";
 import { parse_fraction_input, DimensionInputError } from "@/lib/pricing/fractions";
 import type { PricingConfig, QuoteResult } from "@/lib/pricing/engine";
@@ -125,14 +126,30 @@ export function Hero() {
   }
 
   return (
-    <section className="mx-auto max-w-5xl px-4 pt-14 pb-10 sm:pt-20">
-      <p className="text-xs font-medium uppercase tracking-wide text-amber">Engineering plastics supply</p>
-      <h1 className="mt-2 max-w-2xl text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
-        Aerospace plastics, cut to your size.
-      </h1>
-      <p className="mt-3 max-w-xl text-lg text-graphite sm:text-xl">Priced in seconds. Certified the same day.</p>
+    <>
+      <div className="relative h-[380px] w-full overflow-hidden sm:h-[440px]">
+        <Image
+          src="/photos/saw-cutting-hero.jpg"
+          alt="A sheet of material being guided through a table saw"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink/95 via-ink/45 to-ink/10" />
+        <div className="absolute inset-0 flex flex-col justify-end">
+          <div className="mx-auto w-full max-w-5xl px-4 pb-10">
+            <p className="text-xs font-medium uppercase tracking-wide text-amber">Engineering plastics supply</p>
+            <h1 className="mt-2 max-w-2xl text-4xl font-semibold tracking-tight text-balance text-paper sm:text-5xl">
+              Aerospace plastics, cut to your size.
+            </h1>
+            <p className="mt-3 max-w-xl text-lg text-paper/85 sm:text-xl">Priced in seconds. Certified the same day.</p>
+          </div>
+        </div>
+      </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-start">
+      <section className="mx-auto max-w-5xl px-4 pt-10 pb-10">
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-start">
         <div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <label className="col-span-2 flex flex-col gap-1 text-sm sm:col-span-3">
@@ -284,6 +301,7 @@ export function Hero() {
           })}
         </div>
       ) : null}
-    </section>
+      </section>
+    </>
   );
 }

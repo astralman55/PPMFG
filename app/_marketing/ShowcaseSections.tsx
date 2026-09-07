@@ -57,8 +57,8 @@ export function CuttingShowcase() {
       <h2 className="mt-1 text-2xl font-medium tracking-tight sm:text-3xl">Cut to spec, checked before it ships</h2>
       <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
         <ExpandablePhotoCard
-          src="/photos/cnc-cutting.jpg"
-          alt="A cutting tool machining a workpiece to precise dimensions"
+          src="/photos/saw-blade.jpg"
+          alt="A saw blade cutting through a sheet on a table saw"
           title="Cut to your exact dimensions"
           detail="Length, width, and thickness only - no drawings, no CAD files. Every quote is priced against your exact spec, not the nearest stock sheet size."
         />
@@ -82,8 +82,8 @@ export function ToleranceShowcase() {
       <div className="grid grid-cols-1 overflow-hidden rounded-lg border border-rule sm:grid-cols-2">
         <div className="relative h-64 sm:h-auto sm:min-h-[340px]">
           <Image
-            src="/photos/measuring-tools.jpg"
-            alt="Rulers and a tape measure laid out for comparison"
+            src="/photos/cnc-cutting.jpg"
+            alt="A precision cutting tool machining to a tight tolerance"
             fill
             sizes="(min-width: 640px) 50vw, 100vw"
             className="object-cover"
