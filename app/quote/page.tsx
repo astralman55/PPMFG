@@ -11,7 +11,7 @@ import { SheetDiagram } from "./SheetDiagram";
 import { EmptySheetOutline } from "./EmptySheetOutline";
 import { SpecsAccordion } from "./SpecsAccordion";
 import { Footer } from "../_marketing/Footer";
-import { Logo } from "../_marketing/Logo";
+import { Header } from "../_marketing/Header";
 
 const CFG = cfgJson as unknown as PricingConfig;
 
@@ -91,6 +91,7 @@ type QuoteApiResult = QuoteResult & { quote_id: string; expires_at: string; solo
 export default function QuotePage() {
   return (
     <>
+      <Header maxWidth="max-w-3xl" />
       <Suspense fallback={null}>
         <QuoteForm />
       </Suspense>
@@ -374,8 +375,7 @@ function QuoteForm() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10 text-neutral-900 dark:text-neutral-100">
-      <Logo className="h-10" priority />
-      <h1 className="mt-4 text-2xl font-semibold">Get a price</h1>
+      <h1 className="text-2xl font-semibold">Get a price</h1>
       <p className="mt-1 text-sm text-neutral-500">
         Enter one blank below. Price updates automatically as you type.
       </p>

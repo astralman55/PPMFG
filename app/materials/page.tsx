@@ -3,7 +3,7 @@ import cfgJson from "@/lib/pricing/config.json";
 import type { PricingConfig } from "@/lib/pricing/engine";
 import { MaterialCard } from "./MaterialCard";
 import { Footer } from "../_marketing/Footer";
-import { Logo } from "../_marketing/Logo";
+import { Header } from "../_marketing/Header";
 
 const CFG = cfgJson as unknown as PricingConfig;
 
@@ -22,9 +22,9 @@ export default function MaterialsIndexPage() {
 
   return (
     <>
+    <Header />
     <main className="mx-auto max-w-5xl px-4 py-14 text-ink">
-      <Logo className="h-10" priority />
-      <h1 className="mt-4 text-2xl font-medium tracking-tight sm:text-3xl">Materials</h1>
+      <h1 className="text-2xl font-medium tracking-tight sm:text-3xl">Materials</h1>
       <p className="mt-2 max-w-2xl text-graphite">Specs, brands and stock thicknesses for every material we cut. Pick one to see the full detail page and get a price.</p>
 
       <div className="mt-10 flex flex-col gap-10">

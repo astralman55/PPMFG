@@ -6,6 +6,7 @@ import type { PricingConfig } from "@/lib/pricing/engine";
 import { materialContent, getMaterialContent, getMaterialCodeBySlug } from "@/lib/materials/content";
 import { materialSwatch } from "@/app/_marketing/swatches";
 import { Footer } from "@/app/_marketing/Footer";
+import { Header } from "@/app/_marketing/Header";
 import { MaterialCard } from "../MaterialCard";
 
 const CFG = cfgJson as unknown as PricingConfig;
@@ -50,6 +51,7 @@ export default async function MaterialDetailPage({ params }: { params: Promise<{
 
   return (
     <>
+    <Header maxWidth="max-w-3xl" />
     <main className="mx-auto max-w-3xl px-4 py-14 text-ink">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 

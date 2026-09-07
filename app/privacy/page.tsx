@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { brand } from "@/lib/brand";
 import { Footer } from "../_marketing/Footer";
-import { Logo } from "../_marketing/Logo";
+import { Header } from "../_marketing/Header";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | Precision Plastics Manufacturing",
@@ -17,9 +17,9 @@ function isSet(value: string): boolean {
 export default function PrivacyPage() {
   return (
     <>
+    <Header maxWidth="max-w-2xl" />
     <main className="mx-auto max-w-2xl px-4 py-14 text-ink">
-      <Logo className="h-10" priority />
-      <h1 className="mt-4 text-2xl font-medium tracking-tight sm:text-3xl">Privacy Policy</h1>
+      <h1 className="text-2xl font-medium tracking-tight sm:text-3xl">Privacy Policy</h1>
       <p className="mt-2 text-sm text-graphite">Last updated {LAST_UPDATED}.</p>
 
       <div className="mt-8 flex flex-col gap-8 text-sm leading-relaxed text-graphite [&_h2]:text-base [&_h2]:font-medium [&_h2]:text-ink [&_p]:mt-2 [&_ul]:mt-2 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mt-1">

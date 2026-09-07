@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { articles } from "@/lib/articles/content";
 import { Footer } from "../_marketing/Footer";
-import { Logo } from "../_marketing/Logo";
+import { Header } from "../_marketing/Header";
 
 export const metadata: Metadata = {
   title: "Learn | Precision Plastics Manufacturing",
@@ -12,9 +12,9 @@ export const metadata: Metadata = {
 export default function LearnIndexPage() {
   return (
     <>
+    <Header maxWidth="max-w-3xl" />
     <main className="mx-auto max-w-3xl px-4 py-14 text-ink">
-      <Logo className="h-10" priority />
-      <h1 className="mt-4 text-2xl font-medium tracking-tight sm:text-3xl">Learn</h1>
+      <h1 className="text-2xl font-medium tracking-tight sm:text-3xl">Learn</h1>
       <p className="mt-2 text-graphite">Straight answers to the questions that come up before an order, not after.</p>
 
       <div className="mt-8">

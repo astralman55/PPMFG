@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { getOrderBySessionId } from "@/lib/orders/store";
 import { Footer } from "@/app/_marketing/Footer";
-import { Logo } from "@/app/_marketing/Logo";
+import { Header } from "@/app/_marketing/Header";
 
 /**
  * Where Stripe Checkout's success_url sends the buyer, and what the Stage-1
@@ -79,9 +79,9 @@ export default async function OrderConfirmedPage({
 function Shell({ children }: { children: ReactNode }) {
   return (
     <>
+      <Header maxWidth="max-w-2xl" />
       <main className="mx-auto max-w-2xl px-4 py-10 text-neutral-900 dark:text-neutral-100">
-        <Logo className="h-10" priority />
-        <div className="mt-4">{children}</div>
+        {children}
       </main>
       <Footer />
     </>

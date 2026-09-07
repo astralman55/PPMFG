@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { brand } from "@/lib/brand";
 import { Footer } from "../_marketing/Footer";
-import { Logo } from "../_marketing/Logo";
+import { Header } from "../_marketing/Header";
 
 export const metadata: Metadata = {
   title: "About | Precision Plastics Manufacturing",
@@ -11,9 +11,9 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <>
+    <Header maxWidth="max-w-2xl" />
     <main className="mx-auto max-w-2xl px-4 py-14 text-ink">
-      <Logo className="h-10" priority />
-      <h1 className="mt-4 text-2xl font-medium tracking-tight sm:text-3xl">About</h1>
+      <h1 className="text-2xl font-medium tracking-tight sm:text-3xl">About</h1>
       <p className="mt-4 text-graphite">
         {brand.companyName} cuts engineering plastics - PEEK, Ultem, Delrin, PTFE, PPS, Torlon and G10/FR4 - to size, based in{" "}
         {brand.address.city}, {brand.address.state}.
