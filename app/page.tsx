@@ -4,6 +4,7 @@ import { Stats } from "./_marketing/Stats";
 import { TrustStrip } from "./_marketing/TrustStrip";
 import { ShopByMaterial } from "./_marketing/ShopByMaterial";
 import { ThreeCosts, WhatYouGet, TwoWaysToBuy, Certification, WhyNoDrawings, Faq } from "./_marketing/Sections";
+import { HowItWorks, CuttingShowcase, ToleranceShowcase } from "./_marketing/ShowcaseSections";
 import { Manifesto } from "./_marketing/Manifesto";
 import { FinalCta } from "./_marketing/FinalCta";
 import { Footer } from "./_marketing/Footer";
@@ -31,6 +32,9 @@ export default function LandingPage() {
       {/* Real, live counts plus real capability facts - never claimed case-study
           numbers. See Stats.tsx for exactly what each figure is and isn't. */}
       <Stats />
+      {/* Design-direction review, pattern 4: the order flow laid out once as
+          numbered steps instead of only implied by the quote tool above. */}
+      <HowItWorks />
 
       {/* Trust strip - dormant until real certifications or named customers exist. */}
       <TrustStrip />
@@ -41,6 +45,11 @@ export default function LandingPage() {
           Nox's nesting explainer. */}
       <ThreeCosts />
       <WhatYouGet />
+      {/* Design-direction review, patterns 2 and 3: the click-to-expand photo
+          caption and the split image/text card, built with real stock
+          photography and real config data - see ShowcaseSections.tsx. */}
+      <CuttingShowcase />
+      <ToleranceShowcase />
       {/* "Who we serve," honestly: real certification-tier requirements, not
           fabricated client segments or case studies this one-order shop
           hasn't earned yet. */}

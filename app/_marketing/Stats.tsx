@@ -7,8 +7,8 @@ const CFG = cfgJson as unknown as PricingConfig;
 function Stat({ value, label }: { value: string; label: string }) {
   return (
     <div className="flex flex-col items-center gap-1 text-center">
-      <span className="font-mono text-3xl font-semibold tabular-nums text-ink sm:text-4xl">{value}</span>
-      <span className="text-xs uppercase tracking-wide text-graphite">{label}</span>
+      <span className="font-mono text-3xl font-semibold tabular-nums text-paper sm:text-4xl">{value}</span>
+      <span className="text-xs uppercase tracking-wide text-blueprint-tint/70">{label}</span>
     </div>
   );
 }
@@ -28,8 +28,8 @@ export async function Stats() {
   const utilisationPct = Math.round(CFG.shop.eta_effective_cap * 100);
 
   return (
-    <div className="mx-auto max-w-5xl border-t border-rule px-4 py-10">
-      <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+    <div className="bg-blueprint py-10">
+      <div className="mx-auto grid max-w-5xl grid-cols-2 gap-8 px-4 sm:grid-cols-4">
         <Stat value={String(stats.orders_fulfilled)} label="Orders fulfilled" />
         <Stat value={String(stats.customers_served)} label="Customers served" />
         <Stat value={`${utilisationPct}%`} label="Engineered sheet utilisation" />

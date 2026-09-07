@@ -12,6 +12,14 @@
   --color-rule: #e3e3de;
   --color-amber: #9c600d; /* darkened from #b8710f - the lighter value read only 3.78:1 against paper, below WCAG AA's 4.5:1 for normal text (CLAUDE_CODE_BRIEF.md Phase 14 §22, Lighthouse accessibility check) */
 
+  /* Blueprint - deep technical-drawing blue for bold section-divider bands;
+     Blueprint Tint for softer alternating sections. Chosen deliberately in a
+     hue none of the material swatches below use, so a divider section is
+     never mistaken for a material sample. 11.6:1 / 15.9:1 contrast - see the
+     design-direction review this pair came from. */
+  --color-blueprint: #1b3a5c;
+  --color-blueprint-tint: #eef2f6;
+
   --color-swatch-peek: #e8e0ce;
   --color-swatch-ultem: #c88a2e;
   --color-swatch-delrin: #f4f4f2;
@@ -28,6 +36,8 @@
   --color-graphite: var(--color-graphite);
   --color-rule: var(--color-rule);
   --color-amber: var(--color-amber);
+  --color-blueprint: var(--color-blueprint);
+  --color-blueprint-tint: var(--color-blueprint-tint);
   --font-sans: var(--font-archivo);
 }
 
