@@ -12,8 +12,15 @@ function money0(n: number): string {
   return n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 }
 
-function Heading({ children }: { children: string }) {
-  return <h2 className="text-2xl font-medium tracking-tight sm:text-3xl">{children}</h2>;
+function Heading({ children, eyebrow }: { children: string; eyebrow?: string }) {
+  return (
+    <>
+      {eyebrow ? (
+        <p className="text-xs font-medium uppercase tracking-wide text-amber">{eyebrow}</p>
+      ) : null}
+      <h2 className={`text-2xl font-medium tracking-tight sm:text-3xl ${eyebrow ? "mt-1" : ""}`}>{children}</h2>
+    </>
+  );
 }
 
 function Section({ children, className = "" }: { children: ReactNode; className?: string }) {
@@ -26,7 +33,7 @@ export function ThreeCosts() {
 
   return (
     <Section>
-      <Heading>The three costs of a full sheet</Heading>
+      <Heading eyebrow="Pricing">The three costs of a full sheet</Heading>
       <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-3">
         <div>
           <p className="font-medium">The minimum order</p>
@@ -58,7 +65,7 @@ export function ThreeCosts() {
 export function WhatYouGet() {
   return (
     <Section>
-      <Heading>What you get</Heading>
+      <Heading eyebrow="Every order">What you get</Heading>
       <ul className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
         <li>
           <p className="font-medium">Four edges saw-cut and deburred</p>
@@ -129,7 +136,7 @@ export function MaterialsPreview() {
 export function TwoWaysToBuy() {
   return (
     <Section>
-      <Heading>Two ways to buy</Heading>
+      <Heading eyebrow="Who we serve">Two ways to buy</Heading>
       <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2">
         {Object.values(CFG.certification_tiers).map((t) => (
           <div key={t.label} className="border border-rule p-5">
@@ -158,7 +165,7 @@ function RedactedField({ label, width }: { label: string; width: string }) {
 export function Certification() {
   return (
     <Section>
-      <Heading>Certification</Heading>
+      <Heading eyebrow="Documentation">Certification</Heading>
       <div className="mt-8 grid grid-cols-1 gap-10 sm:grid-cols-2">
         <div className="text-sm text-graphite">
           <p>
@@ -193,7 +200,7 @@ export function Certification() {
 export function WhyNoDrawings() {
   return (
     <Section>
-      <Heading>Why we don&apos;t take your drawings</Heading>
+      <Heading eyebrow="Compliance">Why we don&apos;t take your drawings</Heading>
       <p className="mt-4 max-w-2xl text-sm text-graphite">
         Dimensions alone are not controlled technical data. A drawing of a defense component can be. We only ever ask for
         length, width, thickness and quantity - never a file. Upload a drawing by mistake and we reject it before it touches
@@ -217,7 +224,7 @@ export function Faq() {
   const precision = CFG.tolerance_tiers.PRECISION;
   return (
     <Section>
-      <Heading>Questions</Heading>
+      <Heading eyebrow="Before you order">Questions</Heading>
       <div className="mt-4">
         <FaqItem
           q="Why did my blank arrive slightly bowed?"

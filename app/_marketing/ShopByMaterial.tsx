@@ -23,7 +23,10 @@ export function ShopByMaterial() {
   return (
     <section className="mx-auto max-w-5xl border-t border-rule px-4 py-14">
       <div className="flex items-baseline justify-between">
-        <h2 className="text-2xl font-medium tracking-tight sm:text-3xl">Shop by material</h2>
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-amber">Catalog</p>
+          <h2 className="mt-1 text-2xl font-medium tracking-tight sm:text-3xl">Shop by material</h2>
+        </div>
         <Link href="/materials" className="text-sm text-amber hover:underline">
           See all materials and specs
         </Link>

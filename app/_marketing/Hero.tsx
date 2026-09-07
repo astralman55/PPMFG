@@ -126,9 +126,11 @@ export function Hero() {
 
   return (
     <section className="mx-auto max-w-5xl px-4 pt-14 pb-10 sm:pt-20">
-      <p className="max-w-xl text-lg text-graphite sm:text-xl">
-        Aerospace plastics, cut to your size. Priced in seconds, certified the same day.
-      </p>
+      <p className="text-xs font-medium uppercase tracking-wide text-amber">Engineering plastics supply</p>
+      <h1 className="mt-2 max-w-2xl text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+        Aerospace plastics, cut to your size.
+      </h1>
+      <p className="mt-3 max-w-xl text-lg text-graphite sm:text-xl">Priced in seconds. Certified the same day.</p>
 
       <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-start">
         <div>

@@ -218,6 +218,24 @@ export async function listOrders(): Promise<OrderRow[]> {
   return Array.from(memoryOrdersBySession.values()).sort((a, b) => b.created_at.localeCompare(a.created_at));
 }
 
+export interface PublicShopStats {
+  orders_fulfilled: number;
+  customers_served: number;
+}
+
+/**
+ * Real, live counts for the homepage stats bar - CLAUDE_CODE_BRIEF.md §11
+ * "no fabricated numbers." Deliberately returns only aggregate counts, never
+ * individual order/customer rows, so this is safe to call from a public,
+ * unauthenticated page. Cancelled orders don't count as "fulfilled."
+ */
+export async function getPublicShopStats(): Promise<PublicShopStats> {
+  const orders = await listOrders();
+  const real = orders.filter((o) => o.status !== "cancelled");
+  const distinctCustomers = new Set(real.map((o) => o.customer_id));
+  return { orders_fulfilled: real.length, customers_served: distinctCustomers.size };
+}
+
 async function updateOrder(id: string, patch: Partial<OrderRow>): Promise<OrderRow> {
   if (supabaseConfigured()) {
     const sb = getSupabaseAdmin();
