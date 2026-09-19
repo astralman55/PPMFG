@@ -15,6 +15,9 @@ const archivo = Archivo({
 export const metadata: Metadata = {
   title: "Precision Plastics Manufacturing",
   description: "Aerospace plastics, cut to your size. Priced in seconds, certified the same day.",
+  verification: {
+    google: "9B78jbiGf1UzzCBq4ZcIu5vf7sGjiATVlgv7HBq9AjE",
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
